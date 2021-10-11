@@ -17,7 +17,7 @@
  */
 
 organization := "io.renku"
-name := "json-ld"
+name := "jsonld4s"
 scalaVersion := "2.13.6"
 
 val circeVersion = "0.14.1"
