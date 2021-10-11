@@ -81,7 +81,7 @@ jobs:
       - name: Write version to Chart.yaml
         run: |
           sudo rm -rf .git/index.lock
-          sbt writeVersionToChart
+          sbt publishSigned
       - name: Set environment variables
         run: |
           echo "GIT_USER=Renku Bot" >> $GITHUB_ENV
