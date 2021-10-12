@@ -1,4 +1,4 @@
-name: Test, deploy and Renku test
+name: Test
 on:
   push:
     branches:
