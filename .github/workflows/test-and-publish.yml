@@ -69,7 +69,7 @@ jobs:
         run: |
           echo -n "$GPG_SIGNING_KEY_SONATYPE" | base64 --decode | gpg --import
         env:
-         GPG_SIGNING_KEY_SONATYPE: ${{ secrets.GPG_SIGNING_KEY_SONATYPE }}
+          GPG_SIGNING_KEY_SONATYPE: ${{ secrets.GPG_SIGNING_KEY_SONATYPE }}
       - name: Set up Sonatype credentials
         run: |
           mkdir -p ~/.sbt/1.0/
@@ -94,4 +94,4 @@ jobs:
       - name: Publish to Sonatype
         run: |
           sudo rm -rf .git/index.lock
-          sbt publishSigned
+          sbt publish
