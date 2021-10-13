@@ -72,6 +72,7 @@ jobs:
          GPG_SIGNING_KEY_SONATYPE: ${{ secrets.GPG_SIGNING_KEY_SONATYPE }}
       - name: Set up Sonatype credentials
         run: |
+          mkdir -p ~/.sbt/1.0/
           echo -n 'credentials += Credentials(Path.userHome / ".sbt" / "sonatype_credentials")' >> ~/.sbt/1.0/sonatype.sbt
           echo 'realm=Sonatype Nexus Repository Manager
                 host=s01.oss.sonatype.org
