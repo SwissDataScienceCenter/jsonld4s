@@ -1,1 +1,1 @@
-ThisBuild / version := "$releaseVersion"
+ThisBuild / version := "0.1.9"
