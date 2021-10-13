@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+enablePlugins(GitVersioning)
 
 organization := "io.renku"
 name := "jsonld4s"
@@ -34,8 +35,6 @@ libraryDependencies += "org.scalamock"     %% "scalamock"       % "5.1.0"   % Te
 libraryDependencies += "org.scalatest"     %% "scalatest"       % "3.2.6"   % Test
 libraryDependencies += "org.scalatestplus" %% "scalacheck-1-14" % "3.2.2.0" % Test
 
-
-ThisBuild / organization := "io.renku"
 ThisBuild / organizationName := "SwissDataScienceCenter"
 ThisBuild / organizationHomepage := Some(url("https://www.datascience.ch"))
 
@@ -48,10 +47,10 @@ ThisBuild / scmInfo := Some(
 
 ThisBuild / developers := List(
   Developer(
-    id    = "SwissDataScienceCenter",
-    name  = "Swiss Data Science Center",
+    id = "SwissDataScienceCenter",
+    name = "Swiss Data Science Center",
     email = "renku@datascience.ch",
-    url   = url("https://www.datascience.ch")
+    url = url("https://www.datascience.ch")
   )
 )
 
