@@ -36,6 +36,7 @@ libraryDependencies += "org.scalatestplus" %% "scalacheck-1-14" % "3.2.2.0" % Te
 
 ThisBuild / organizationName := "SwissDataScienceCenter"
 ThisBuild / organizationHomepage := Some(url("https://www.datascience.ch"))
+ThisBuild / version := "0.1.10"
 
 ThisBuild / scmInfo := Some(
   ScmInfo(
