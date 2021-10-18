@@ -1,13 +1,15 @@
 package examples
 
+import examples.ExampleSchemas.schema
 import io.renku.jsonld.syntax._
 import io.renku.jsonld._
+import io.circe.literal._
 
 object Flattening extends App {
 
-  val schema: Schema = Schema.from("http://schema.org")
+  // Encoding
 
-  implicit val userEncoder: JsonLDEncoder[User] = JsonLDEncoder.instance { user =>
+  private implicit val userEncoder: JsonLDEncoder[User] = JsonLDEncoder.instance { user =>
     JsonLD.entity(
       EntityId of s"http://example.org/users/${user.name.hashCode}",
       EntityTypes of (schema / "Person"),
@@ -24,20 +26,91 @@ object Flattening extends App {
     )
   }
 
-  val members = List(User("User1"), User("User2"))
-  val project = Project(name = "MyProject", members)
+  private val members = List(User("User1"), User("User2"))
+  private val project = Project(name = "MyProject", members)
 
-  val allObjectsAsJsonLD = JsonLD.arr(project.asJsonLD +: members.map(_.asJsonLD): _*)
+  private val expectedJsonTreeFull =
+    json"""
+          {
+            "@id" : "http://example.org/projects/46955437",
+            "@type" : "http://schema.org/Project",
+            "http://schema.org/member" : [
+              {
+                "@id" : "http://example.org/users/82025894",
+                "@type" : "http://schema.org/Person",
+                "http://schema.org/name" : {
+                  "@value" : "User1"
+                }
+              },
+              {
+                "@id" : "http://example.org/users/82025895",
+                "@type" : "http://schema.org/Person",
+                "http://schema.org/name" : {
+                  "@value" : "User2"
+                }
+              }
+            ],
+            "http://schema.org/name" : {
+              "@value" : "MyProject"
+            }
+          }
+        """
 
-  println("Full tree: \n\n" + allObjectsAsJsonLD.toJson)
-  /* Full JSON-LD tree (with duplicate data)
-TODO: PASTE OUTPUT
-   */
+  assert(project.asJsonLD.toJson == expectedJsonTreeFull)
 
-  println("\n\nFlattened tree:\n\n" + allObjectsAsJsonLD.flatten.fold(throw _, identity).toJson)
+  private val expectedJsonFlattened =
+    json"""
+          [
+            {
+              "@id" : "http://example.org/projects/46955437",
+              "@type" : "http://schema.org/Project",
+              "http://schema.org/member" : [
+                {
+                  "@id" : "http://example.org/users/82025894"
+                },
+                {
+                  "@id" : "http://example.org/users/82025895"
+                }
+              ],
+              "http://schema.org/name" : {
+                "@value" : "MyProject"
+              }
+            },
+            {
+              "@id" : "http://example.org/users/82025894",
+              "@type" : "http://schema.org/Person",
+              "http://schema.org/name" : {
+                "@value" : "User1"
+              }
+            },
+            {
+              "@id" : "http://example.org/users/82025895",
+              "@type" : "http://schema.org/Person",
+              "http://schema.org/name" : {
+                "@value" : "User2"
+              }
+            }
+          ]
+        """
 
-  /* Flattened JSON-LD tree (without duplicate data)
+  assert(project.asJsonLD.flatten.fold(throw _, identity).toJson == expectedJsonFlattened)
 
-   */
+  // Decoding
+
+  private val userEntityTypes:    EntityTypes = EntityTypes.of(schema / "Person")
+  private val projectEntityTypes: EntityTypes = EntityTypes.of(schema / "Project")
+
+  private implicit val userDecoder: JsonLDDecoder[User] = JsonLDDecoder.entity(userEntityTypes) { cursor =>
+    cursor.downField(schema / "name").as[String].map(name => User(name))
+  }
+
+  private implicit val projectDecoder: JsonLDDecoder[Project] = JsonLDDecoder.entity(projectEntityTypes) { cursor =>
+    for {
+      name    <- cursor.downField(schema / "name").as[String]
+      members <- cursor.downField(schema / "member").as[List[User]]
+    } yield Project(name, members)
+  }
+
+  assert(project.asJsonLD.flatten.flatMap(_.cursor.as[List[Project]]) == Right(List(project)))
 
 }

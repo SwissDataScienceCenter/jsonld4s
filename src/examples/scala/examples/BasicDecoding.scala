@@ -1,68 +1,59 @@
 package examples
 
-import examples.Flattening.schema
-import io.renku.jsonld.{EntityTypes, JsonLD, JsonLDDecoder}
+import examples.ExampleSchemas.schema
 import io.renku.jsonld.parser._
+import io.renku.jsonld.{EntityTypes, JsonLD, JsonLDDecoder}
 
-object BasicDecoding {
+object BasicDecoding extends App {
 
-  val input = """                  
-                |[
-                |  {
-                |    "@id" : "http://example.org/projects/1420319887",
-                |    "@type" : "http://schema.org/Project",
-                |    "http://schema.org/member" : [
-                |      {
-                |        "@id" : "http://example.org/users/-296456315"
-                |      },
-                |      {
-                |        "@id" : "http://example.org/users/51770787"
-                |      }
-                |    ],
-                |    "http://schema.org/name" : {
-                |      "@value" : "MyProject"
-                |    }
-                |  },
-                |  {
-                |    "@id" : "http://example.org/users/-296456315",
-                |    "@type" : "http://schema.org/Project",
-                |    "http://schema.org/name" : {
-                |      "@value" : "User1"
-                |    }
-                |  },
-                |  {
-                |    "@id" : "http://example.org/users/51770787",
-                |    "@type" : "http://schema.org/Project",
-                |    "http://schema.org/name" : {
-                |      "@value" : "User2"
-                |    }
-                |  },
-                |  {
-                |    "@id" : "http://example.org/users/704621988",
-                |    "@type" : "http://schema.org/Project",
-                |    "http://schema.org/name" : {
-                |      "@value" : "User1"
-                |    }
-                |  },
-                |  {
-                |    "@id" : "http://example.org/users/1306141351",
-                |    "@type" : "http://schema.org/Project",
-                |    "http://schema.org/name" : {
-                |      "@value" : "User2"
-                |    }
-                |  }
-                |]
-                |""".stripMargin
+  private val input: String =
+    """
+      |[
+      |  {
+      |    "@id" : "http://example.org/projects/46955437",
+      |    "@type" : "http://schema.org/Project",
+      |    "http://schema.org/member" : [
+      |      {
+      |        "@id" : "http://example.org/users/82025894",
+      |        "@type" : "http://schema.org/Person",
+      |        "http://schema.org/name" : {
+      |          "@value" : "User1"
+      |        }
+      |      },
+      |      {
+      |        "@id" : "http://example.org/users/82025895",
+      |        "@type" : "http://schema.org/Person",
+      |        "http://schema.org/name" : {
+      |          "@value" : "User2"
+      |        }
+      |      }
+      |    ],
+      |    "http://schema.org/name" : {
+      |      "@value" : "MyProject"
+      |    }
+      |  }
+      |]
+      |""".stripMargin
 
-  val result: Either[ParsingFailure, JsonLD] = parse(input)
+  private val userEntityTypes:    EntityTypes = EntityTypes.of(schema / "Person")
+  private val projectEntityTypes: EntityTypes = EntityTypes.of(schema / "Project")
 
-  implicit val userDecoder:    JsonLDDecoder[User]    = ???
-  implicit val projectDecoder: JsonLDDecoder[Project] = ???
-  result.map((json: JsonLD) => json.cursor.as[List[Project]])
+  private implicit val userDecoder: JsonLDDecoder[User] = JsonLDDecoder.entity(userEntityTypes) { cursor =>
+    cursor.downField(schema / "name").as[String].map(name => User(name))
+  }
 
-  // SHOW OTHER TYPES OUT OF THE BOX
-  // OPTIONAL FIELDS - DECODING / ENCODING
-  //
-  // SETS, LISTS, SEQUENCES
+  private implicit val projectDecoder: JsonLDDecoder[Project] = JsonLDDecoder.entity(projectEntityTypes) { cursor =>
+    for {
+      name    <- cursor.downField(schema / "name").as[String]
+      members <- cursor.downField(schema / "member").as[List[User]]
+    } yield Project(name, members)
+  }
+
+  private val result: Either[ParsingFailure, JsonLD] = parse(input)
+  assert(
+    result.flatMap((json: JsonLD) => (json.cursor.as[List[Project]])) == Right(
+      List(Project("MyProject", List(User("User1"), User("User2"))))
+    )
+  )
 
 }
