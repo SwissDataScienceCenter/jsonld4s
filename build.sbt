@@ -36,7 +36,7 @@ libraryDependencies += "org.scalatestplus" %% "scalacheck-1-14" % "3.2.2.0" % Te
 
 ThisBuild / organizationName := "SwissDataScienceCenter"
 ThisBuild / organizationHomepage := Some(url("https://www.datascience.ch"))
-ThisBuild / version := "0.1.12"
+ThisBuild / version := "0.1.14"
 
 ThisBuild / scmInfo := Some(
   ScmInfo(
@@ -55,18 +55,14 @@ ThisBuild / developers := List(
 )
 
 ThisBuild / description := "Circe extension for JSON-LD parsing in Scala"
-ThisBuild / licenses := List("Apache 2.0" -> new URL("http://www.apache.org/licenses/"))
 ThisBuild / homepage := Some(url("https://github.com/SwissDataScienceCenter/jsonld4s"))
 
 // Remove all additional repository other than Maven Central from POM
 ThisBuild / pomIncludeRepository := { _ => false }
 
-ThisBuild / publishTo := {
-  val nexus = "https://s01.oss.sonatype.org/"
-  if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
-  else Some("releases" at nexus + "service/local/staging/deploy/maven2")
-}
-
-ThisBuild / publishMavenStyle := true
-
 ThisBuild / versionScheme := Some("early-semver")
+
+// Sonatype plugin stuff
+ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
+
+publishTo := sonatypePublishToBundle.value
