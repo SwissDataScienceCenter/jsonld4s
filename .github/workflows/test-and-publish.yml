@@ -93,11 +93,9 @@ jobs:
             ~/.ivy2
             ~/.sbt
           key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
-      - name: Set environment variables
-        run: |
-          echo "GIT_USER=Renku Bot" >> $GITHUB_ENV
-          echo "GIT_EMAIL=renku@datascience.ch" >> $GITHUB_ENV
       - name: Publish to Sonatype
         run: |
           sudo rm -rf .git/index.lock
+          git config --global user.email "renku@datascience.ch"
+          git config --global user.name "Renku Bot"
           sbt 'release with-defaults'
