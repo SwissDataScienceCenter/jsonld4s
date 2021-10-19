@@ -36,7 +36,7 @@ libraryDependencies += "org.scalatestplus" %% "scalacheck-1-14" % "3.2.2.0" % Te
 
 ThisBuild / organizationName := "SwissDataScienceCenter"
 ThisBuild / organizationHomepage := Some(url("https://www.datascience.ch"))
-//ThisBuild / version := "0.1.15"
+ThisBuild / version := "0.1.18"
 
 ThisBuild / scmInfo := Some(
   ScmInfo(
@@ -66,3 +66,17 @@ ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 
 publishTo := sonatypePublishToBundle.value
+
+import ReleaseTransformations._
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  runClean,
+  setReleaseVersion,
+  commitReleaseVersion,
+  releaseStepCommandAndRemaining("+publishSigned"),
+  releaseStepCommand("sonatypeBundleRelease"),
+  setNextVersion,
+  commitNextVersion,
+  pushChanges
+)
