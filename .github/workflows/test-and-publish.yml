@@ -94,5 +94,4 @@ jobs:
       - name: Publish to Sonatype
         run: |
           sudo rm -rf .git/index.lock
-          sbt publishSigned
-          sbt sonatypeBundleRelease
+          sbt release with-defaults
