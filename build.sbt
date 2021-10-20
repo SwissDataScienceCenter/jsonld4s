@@ -80,7 +80,6 @@ ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
 publishTo := sonatypePublishToBundle.value
 
 import ReleaseTransformations._
-import sbtrelease.Vcs
 
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
