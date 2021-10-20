@@ -16,9 +16,19 @@
  * limitations under the License.
  */
 
-organization := "io.renku"
-name := "jsonld4s"
-scalaVersion := "2.13.6"
+lazy val root = Project(
+  id = "jsonld4s",
+  base = file(".")
+)
+  .configs(Examples)
+  .settings(
+    organization := "io.renku",
+    name := "jsonld4s",
+    scalaVersion := "2.13.6",
+    inConfig(Examples)(Defaults.testSettings)
+  )
+
+lazy val Examples = config("examples") extend Test
 
 val circeVersion = "0.14.1"
 libraryDependencies += "io.circe" %% "circe-core"    % circeVersion

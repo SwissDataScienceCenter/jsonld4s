@@ -3,8 +3,10 @@ package examples
 import examples.ExampleSchemas.schema
 import io.renku.jsonld.parser._
 import io.renku.jsonld.{EntityTypes, JsonLD, JsonLDDecoder}
+import org.scalatest.matchers.should
+import org.scalatest.wordspec.AnyWordSpec
 
-object BasicDecoding extends App {
+class BasicDecoding extends AnyWordSpec with should.Matchers {
 
   private val input: String =
     """
@@ -55,5 +57,7 @@ object BasicDecoding extends App {
       List(Project("MyProject", List(User("User1"), User("User2"))))
     )
   )
+
+  assert(false)
 
 }
