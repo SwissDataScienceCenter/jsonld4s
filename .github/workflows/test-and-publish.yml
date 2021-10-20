@@ -1,8 +1,8 @@
 name: Test and publish
 on:
-  push:
-    tags:
-      - '*.*.*'
+  release:
+    types:
+      - published
 env:
   SBT_OPTS: "-XX:+CMSClassUnloadingEnabled -Xmx2G"
 jobs:
