@@ -76,7 +76,6 @@ releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
   runClean,
-  fetchHistory,
   setReleaseVersion,
   commitReleaseVersion,
   //releaseStepCommandAndRemaining("+publishSigned"),
@@ -87,10 +86,3 @@ releaseProcess := Seq[ReleaseStep](
 )
 
 releaseUseGlobalVersion := false
-
-def fetchHistory = ReleaseStep(action = st => {
-  Vcs
-    .detect(file("."))
-    .map(_.cmd("fetch", "--all").!!.trim)
-  st
-})
