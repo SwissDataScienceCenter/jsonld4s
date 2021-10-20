@@ -119,4 +119,5 @@ jobs:
           git config --global user.email "renku@datascience.ch"
           git config --global user.name "Renku Bot"
           git switch -c temp
+          git branch --set-upstream-to=origin/main
           sbt 'release with-defaults'
