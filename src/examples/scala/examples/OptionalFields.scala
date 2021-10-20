@@ -5,8 +5,9 @@ import io.circe.literal._
 import io.renku.jsonld.parser.{ParsingFailure, parse}
 import io.renku.jsonld.syntax._
 import io.renku.jsonld.{EntityId, EntityTypes, JsonLD, JsonLDDecoder, JsonLDEncoder}
+import org.scalatest.wordspec.AnyWordSpec
 
-object OptionalFields extends App {
+class OptionalFields extends AnyWordSpec {
 
   // Encoding
 

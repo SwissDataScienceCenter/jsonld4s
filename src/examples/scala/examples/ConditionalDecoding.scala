@@ -2,8 +2,9 @@ package examples
 import ExampleSchemas._
 import io.renku.jsonld.parser._
 import io.renku.jsonld.{Cursor, EntityTypes, JsonLD, JsonLDDecoder, JsonLDEntityDecoder}
+import org.scalatest.wordspec.AnyWordSpec
 
-object ConditionalDecoding extends App {
+class ConditionalDecoding extends AnyWordSpec {
 
   private implicit val conditionalUserDecoder: JsonLDEntityDecoder[User] = JsonLDDecoder.entity(
     EntityTypes of (schema / "Person"),
