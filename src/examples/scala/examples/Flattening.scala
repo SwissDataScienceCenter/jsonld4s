@@ -4,8 +4,9 @@ import examples.ExampleSchemas.schema
 import io.renku.jsonld.syntax._
 import io.renku.jsonld._
 import io.circe.literal._
+import org.scalatest.wordspec.AnyWordSpec
 
-object Flattening extends App {
+class Flattening extends AnyWordSpec {
 
   // Encoding
 

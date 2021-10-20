@@ -4,8 +4,9 @@ import examples.ExampleSchemas.prov
 import io.renku.jsonld._
 import io.renku.jsonld.syntax._
 import io.circe.literal._
+import org.scalatest.wordspec.AnyWordSpec
 
-object BasicEncoding extends App {
+class BasicEncoding extends AnyWordSpec {
 
   final case class MyType(value: String)
 

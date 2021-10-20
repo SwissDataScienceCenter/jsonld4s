@@ -6,7 +6,7 @@ import io.renku.jsonld.{EntityTypes, JsonLD, JsonLDDecoder}
 import org.scalatest.matchers.should
 import org.scalatest.wordspec.AnyWordSpec
 
-class BasicDecoding extends AnyWordSpec with should.Matchers {
+class BasicDecoding extends AnyWordSpec {
 
   private val input: String =
     """
@@ -57,7 +57,5 @@ class BasicDecoding extends AnyWordSpec with should.Matchers {
       List(Project("MyProject", List(User("User1"), User("User2"))))
     )
   )
-
-  assert(false)
 
 }
