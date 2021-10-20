@@ -56,7 +56,7 @@ ThisBuild / developers := List(
   )
 )
 
-ThisBuild / description := "Circe extension for JSON-LD parsing in Scala"
+ThisBuild / description := "Scala Circe extension for JSON-LD"
 ThisBuild / homepage := Some(url("https://github.com/SwissDataScienceCenter/jsonld4s"))
 
 // Remove all additional repository other than Maven Central from POM
