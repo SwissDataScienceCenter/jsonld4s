@@ -66,7 +66,7 @@ object EntityTypes {
 
   implicit val entityTypesJsonEncoder: Encoder[EntityTypes] = Encoder.instance { t =>
     t.toList match {
-      case only +: Nil => only.asJson
+      case only :: Nil => only.asJson
       case multiple    => Json.arr(multiple.map(_.asJson): _*)
     }
   }
