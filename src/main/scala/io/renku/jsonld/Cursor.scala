@@ -154,8 +154,7 @@ object Cursor {
       case _                                                                   => None
     }
 
-    private def by(entityTypes: EntityTypes): JsonLDEntity => Boolean =
-      _.types contains entityTypes
+    private def by(entityTypes: EntityTypes): JsonLDEntity => Boolean = _.types contains entityTypes
 
     private def check(
         predicate: Cursor => JsonLDDecoder.Result[Boolean]
