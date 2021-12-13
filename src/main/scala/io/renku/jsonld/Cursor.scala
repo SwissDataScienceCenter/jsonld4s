@@ -22,9 +22,10 @@ import cats.Show
 import cats.syntax.all._
 import io.circe.DecodingFailure
 import io.renku.jsonld.JsonLD._
+import io.renku.jsonld.JsonLDDecoder.Result
 import io.renku.jsonld.syntax._
 
-abstract class Cursor {
+abstract class Cursor(implicit decodingCache: DecodingCache) extends Caching(decodingCache) {
 
   import Cursor._
 
@@ -43,11 +44,11 @@ abstract class Cursor {
     jsonLD.asArray
       .map {
         case jsons if jsons.isEmpty => failure
-        case head +: tail if tail.isEmpty =>
+        case json +: tail if tail.isEmpty =>
           this match {
             case cursor @ FlattenedArrayCursor(_, _, allEntities) =>
-              decoder(FlattenedJsonCursor(cursor, head, allEntities))
-            case _ => decoder(ListItemCursor(this, head))
+              decoder(FlattenedJsonCursor(cursor, json, allEntities))
+            case _ => decoder(ListItemCursor(this, json))
           }
         case _ => failure
       }
@@ -56,6 +57,12 @@ abstract class Cursor {
   def getEntityTypes: JsonLDDecoder.Result[EntityTypes] = jsonLD match {
     case JsonLDEntity(_, entityTypes, _, _) => Right(entityTypes)
     case _ => Left(DecodingFailure("No EntityTypes found on non-JsonLDEntity object", Nil))
+  }
+
+  def findEntityId: Option[EntityId] = jsonLD match {
+    case JsonLDEntityId(entityId)        => entityId.some
+    case JsonLDEntity(entityId, _, _, _) => entityId.some
+    case _                               => None
   }
 
   def downEntityId: Cursor = jsonLD match {
@@ -111,20 +118,21 @@ abstract class Cursor {
 }
 
 object Cursor {
-  def from(jsonLD: JsonLD): Cursor = TopCursor(jsonLD)
 
-  private[jsonld] final case class Empty(maybeMessage: Option[String]) extends Cursor {
+  def from(jsonLD: JsonLD): Cursor = TopCursor(jsonLD)(DecodingCache.empty)
+
+  private[jsonld] final case class Empty(maybeMessage: Option[String])(implicit decodingCache: DecodingCache)
+      extends Cursor {
     override lazy val jsonLD: JsonLD         = JsonLD.JsonLDNull
     override lazy val delete: Cursor         = this
     override lazy val top:    Option[JsonLD] = None
   }
 
   private[jsonld] object Empty {
-    val noMessage: Empty = Empty(None)
 
-    def apply(): Empty = noMessage
+    def apply()(implicit decodingCache: DecodingCache): Empty = Empty(None)
 
-    def apply(message: String): Empty = Empty(Some(message))
+    def apply(message: String)(implicit decodingCache: DecodingCache): Empty = Empty(Some(message))
 
     implicit val show: Show[Empty] = Show.show[Empty] {
       case Empty(Some(message)) => s"Empty cursor cause by: $message"
@@ -132,27 +140,31 @@ object Cursor {
     }
   }
 
-  private[jsonld] final case class TopCursor(jsonLD: JsonLD) extends Cursor {
+  private[jsonld] final case class TopCursor(jsonLD: JsonLD)(implicit decodingCache: DecodingCache) extends Cursor {
     override lazy val delete: Cursor         = Empty()
     override lazy val top:    Option[JsonLD] = Some(jsonLD)
   }
 
   private[jsonld] final case class FlattenedJsonCursor(
-      parent:      Cursor,
-      jsonLD:      JsonLD,
-      allEntities: Map[EntityId, JsonLDEntity]
-  ) extends Cursor {
+      parent:               Cursor,
+      jsonLD:               JsonLD,
+      allEntities:          Map[EntityId, JsonLDEntity]
+  )(implicit decodingCache: DecodingCache)
+      extends Cursor {
     override lazy val delete: Cursor         = Empty()
     override lazy val top:    Option[JsonLD] = parent.top
 
-    def findEntity(entityTypes: EntityTypes,
-                   predicate:   Cursor => JsonLDDecoder.Result[Boolean]
-    ): Option[JsonLDDecoder.Result[JsonLDEntity]] = jsonLD match {
-      case JsonLDEntityId(entityId) =>
-        allEntities.get(entityId).filter(by(entityTypes)).findM(entity => predicate(entity.cursor)).sequence
-      case entity @ JsonLDEntity(_, types, _, _) if types contains entityTypes => check(predicate)(entity)
-      case _                                                                   => None
-    }
+    def downTo(jsonLD: JsonLDEntity): FlattenedJsonCursor = FlattenedJsonCursor(this, jsonLD, allEntities)
+
+    def findEntity(entityTypes: EntityTypes, predicate: Cursor => Result[Boolean]): Option[Result[JsonLDEntity]] =
+      jsonLD match {
+        case JsonLDEntityId(entityId) =>
+          allEntities.get(entityId).filter(by(entityTypes)).findM(entity => predicate(entity.cursor)).sequence
+        case entity @ JsonLDEntity(_, types, _, _) if types contains entityTypes => check(predicate)(entity)
+        case _                                                                   => None
+      }
+
+    def findEntityById(entityId: EntityId): Option[JsonLDEntity] = allEntities.get(entityId)
 
     private def by(entityTypes: EntityTypes): JsonLDEntity => Boolean = _.types contains entityTypes
 
@@ -162,7 +174,14 @@ object Cursor {
       entity => predicate(entity.cursor).map(Option.when(_)(entity)).sequence
   }
 
-  private[jsonld] final case class DeletedPropertyCursor(parent: Cursor, property: Property) extends Cursor {
+  private[jsonld] object FlattenedJsonCursor {
+    def from(parent: Cursor, jsonLD: JsonLD, allEntities: Map[EntityId, JsonLDEntity]): FlattenedJsonCursor =
+      FlattenedJsonCursor(parent, jsonLD, allEntities)(parent.decodingCache)
+  }
+
+  private[jsonld] final case class DeletedPropertyCursor(parent: Cursor, property: Property)(implicit
+      decodingCache:                                             DecodingCache
+  ) extends Cursor {
     override lazy val jsonLD: JsonLD = JsonLD.JsonLDNull
     override lazy val delete: Cursor = this
     override lazy val top: Option[JsonLD] = parent.jsonLD match {
@@ -171,17 +190,26 @@ object Cursor {
     }
   }
 
-  private[jsonld] final case class PropertyCursor(parent: Cursor, property: Property, jsonLD: JsonLD) extends Cursor {
+  private[jsonld] final case class PropertyCursor(parent: Cursor, property: Property, jsonLD: JsonLD)(implicit
+      decodingCache:                                      DecodingCache
+  ) extends Cursor {
     override lazy val delete: Cursor         = DeletedPropertyCursor(parent, property)
     override lazy val top:    Option[JsonLD] = parent.top
   }
 
-  private[jsonld] final case class ListItemCursor(parent: Cursor, jsonLD: JsonLD) extends Cursor {
+  private[jsonld] final case class ListItemCursor(parent: Cursor, jsonLD: JsonLD)(implicit decodingCache: DecodingCache)
+      extends Cursor {
     override lazy val top:    Option[JsonLD] = parent.top
     override lazy val delete: Cursor         = Empty()
   }
 
-  private[jsonld] final case class ArrayCursor(parent: Cursor, jsonLD: JsonLDArray) extends Cursor {
+  private[jsonld] object ListItemCursor {
+    def from(parent: Cursor, jsonLD: JsonLD): ListItemCursor = ListItemCursor(parent, jsonLD)(parent.decodingCache)
+  }
+
+  private[jsonld] final case class ArrayCursor(parent: Cursor, jsonLD: JsonLDArray)(implicit
+      decodingCache:                                   DecodingCache
+  ) extends Cursor {
     override lazy val top:    Option[JsonLD] = parent.top
     override lazy val delete: Cursor         = Empty()
   }
@@ -189,8 +217,50 @@ object Cursor {
   private[jsonld] final case class FlattenedArrayCursor(parent:      Cursor,
                                                         jsonLD:      JsonLDArray,
                                                         allEntities: Map[EntityId, JsonLDEntity]
-  ) extends Cursor {
+  )(implicit decodingCache:                                          DecodingCache)
+      extends Cursor {
     override lazy val top:    Option[JsonLD] = parent.top
     override lazy val delete: Cursor         = Empty()
+
+    def downTo(jsonLD: JsonLD): FlattenedJsonCursor = FlattenedJsonCursor(this, jsonLD, allEntities)
   }
+}
+
+private[jsonld] sealed abstract class Caching(private[jsonld] val decodingCache: DecodingCache) {
+  self: Cursor =>
+
+  def findInCache[A](decoder: JsonLDDecoder[A]): Option[A] =
+    decoder match {
+      case d: JsonLDEntityDecoder[A] => findInCache[A](d.cacheableDecoder)
+      case _ => None
+    }
+
+  def findInCache[A](entityId: EntityId, decoder: JsonLDDecoder[A]): Option[A] =
+    decoder match {
+      case d: JsonLDEntityDecoder[A] => decodingCache.get(entityId)(d.cacheableDecoder)
+      case _ => None
+    }
+
+  def findInCache[A](implicit cacheableDecoder: CacheableEntityDecoder[A]): Option[A] =
+    findEntityId >>= decodingCache.get[A]
+
+  def cache[A](entityId: EntityId, obj: A, decoder: JsonLDDecoder[A]): A = decoder match {
+    case d: JsonLDEntityDecoder[A] => cache(entityId, obj)(d.cacheableDecoder)
+    case _ => obj
+  }
+
+  def cache[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder[A]): A =
+    decodingCache.offer(entityId, obj)
+
+  def cache[A](json: JsonLD, obj: A, decoder: JsonLDDecoder[A]): A = json match {
+    case entity: JsonLDEntity => cache(entity, obj, decoder)
+    case _ => obj
+  }
+
+  def cache[A](entity: JsonLDEntity, obj: A, decoder: JsonLDDecoder[A]): A = {
+    decoder match {
+      case d: JsonLDEntityDecoder[A] => entity.entityId.map(cache(_, obj)(d.cacheableDecoder))
+      case _ => None
+    }
+  }.getOrElse(obj)
 }

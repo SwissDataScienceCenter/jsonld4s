@@ -34,6 +34,8 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.Matchers {
 
+  private implicit val emptyDecodingCache: DecodingCache = DecodingCache.empty
+
   "Empty" should {
 
     "show as 'Empty Cursor' if does not have a message" in {
@@ -156,7 +158,7 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
 
     "return itself if called on an array wrapped in the FlattenedArrayCursor" in {
       val cursor =
-        FlattenedArrayCursor(Cursor.Empty.noMessage, JsonLDArray(jsonLDValues.generateNonEmptyList().toList), Map.empty)
+        FlattenedArrayCursor(Cursor.Empty(), JsonLDArray(jsonLDValues.generateNonEmptyList().toList), Map.empty)
       cursor.downArray shouldBe cursor
     }
 

@@ -8,7 +8,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 class BasicEncoding extends AnyWordSpec {
 
-  final case class MyType(value: String)
+  case class MyType(value: String)
 
   private implicit val myTypeEncoder: JsonLDEncoder[MyType] = JsonLDEncoder.instance { entity =>
     JsonLD.entity(

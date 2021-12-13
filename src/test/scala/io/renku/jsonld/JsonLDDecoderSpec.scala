@@ -212,6 +212,8 @@ class JsonLDDecoderSpec
     }
 
     "decode entity when only its id is encoded as a single value array on flattened json" in {
+      implicit val emptyDecodingCache: DecodingCache = DecodingCache.empty
+
       val childEntityIdEncoder = EntityIdEncoder.instance[Child](child => EntityId.of(s"child/${child.name}"))
       val childEntity = JsonLD.entity(childEntityIdEncoder(parent1.child),
                                       EntityTypes.of(schema / "Child"),
@@ -427,6 +429,77 @@ class JsonLDDecoderSpec
         .fold(fail(_), identity)
         .cursor
         .as[List[Parent]] shouldBe List(parent1).asRight
+    }
+
+    "decode entities with links to a shared entity" in {
+      val child   = Child("child")
+      val parent1 = Parent("parent1", child)
+      val parent2 = Parent("parent2", child)
+
+      JsonLD
+        .arr(parent1.asJsonLD, parent2.asJsonLD)
+        .flatten
+        .fold(fail(_), identity)
+        .cursor
+        .as[List[Parent]] shouldBe List(parent1, parent2).asRight
+    }
+
+    "decode entities with links to a shared entity - case with caching decoders" in {
+
+      lazy val childDecoder: JsonLDEntityDecoder[Child] =
+        JsonLDDecoder.cacheableEntity(EntityTypes.of(schema / "Child")) { cursor =>
+          cursor.downField(schema / "name").as[String] map Child.apply
+        }
+
+      lazy val parentDecoder: JsonLDEntityDecoder[Parent] =
+        JsonLDDecoder.cacheableEntity(EntityTypes.of(schema / "Parent")) { cursor =>
+          for {
+            id    <- cursor.downEntityId.as[EntityId]
+            types <- cursor.getEntityTypes
+            name  <- cursor.downField(schema / "name").as[String]
+            child <- cursor.downField(schema / "child").as[Child](childDecoder)
+          } yield Parent(id, types, name, child)
+        }
+
+      val child   = Child("child")
+      val parent1 = Parent("parent1", child)
+      val parent2 = Parent("parent2", child)
+
+      JsonLD
+        .arr(parent1.asJsonLD, parent2.asJsonLD)
+        .flatten
+        .fold(fail(_), identity)
+        .cursor
+        .as[List[Parent]](decodeList(parentDecoder)) shouldBe List(parent1, parent2).asRight
+    }
+
+    "decode entities with links to a shared entity - case with a mix of caching and non-caching decoders" in {
+
+      lazy val childDecoder: JsonLDEntityDecoder[Child] =
+        JsonLDDecoder.cacheableEntity(EntityTypes.of(schema / "Child")) { cursor =>
+          cursor.downField(schema / "name").as[String] map Child.apply
+        }
+
+      lazy val parentDecoder: JsonLDEntityDecoder[Parent] =
+        JsonLDDecoder.cacheableEntity(EntityTypes.of(schema / "Parent")) { cursor =>
+          for {
+            id    <- cursor.downEntityId.as[EntityId]
+            types <- cursor.getEntityTypes
+            name  <- cursor.downField(schema / "name").as[String]
+            child <- cursor.downField(schema / "child").as[Child](childDecoder)
+          } yield Parent(id, types, name, child)
+        }
+
+      val child   = Child("child")
+      val parent1 = Parent("parent1", child)
+      val parent2 = Parent("parent2", child)
+
+      JsonLD
+        .arr(parent1.asJsonLD, parent2.asJsonLD)
+        .flatten
+        .fold(fail(_), identity)
+        .cursor
+        .as[List[Parent]](decodeList(parentDecoder)) shouldBe List(parent1, parent2).asRight
     }
   }
 
