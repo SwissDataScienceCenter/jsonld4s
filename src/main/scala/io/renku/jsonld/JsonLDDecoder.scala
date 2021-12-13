@@ -203,8 +203,8 @@ object CacheableEntityDecoder {
   def yes[A]: JsonLDEntityDecoder[A] => CacheableEntityDecoder.Yes[A] = Yes(_)
   def no[A]:  JsonLDEntityDecoder[_] => CacheableEntityDecoder.No[A]  = _ => No[A]()
 
-  case class Yes[A](decoder: JsonLDEntityDecoder[A]) extends CacheableEntityDecoder[A]
-  case class No[A]()                                 extends CacheableEntityDecoder[A]
+  final case class Yes[A](decoder: JsonLDEntityDecoder[A]) extends CacheableEntityDecoder[A]
+  final case class No[A]()                                 extends CacheableEntityDecoder[A]
 }
 
 private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I]) extends JsonLDDecoder[List[I]] {
