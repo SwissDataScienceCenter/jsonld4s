@@ -481,7 +481,7 @@ class JsonLDDecoderSpec
         }
 
       lazy val parentDecoder: JsonLDEntityDecoder[Parent] =
-        JsonLDDecoder.cacheableEntity(EntityTypes.of(schema / "Parent")) { cursor =>
+        JsonLDDecoder.entity(EntityTypes.of(schema / "Parent")) { cursor =>
           for {
             id    <- cursor.downEntityId.as[EntityId]
             types <- cursor.getEntityTypes
