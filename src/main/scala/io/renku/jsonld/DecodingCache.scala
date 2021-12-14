@@ -37,8 +37,9 @@ object DecodingCache {
 
     override def get[A](entityId: EntityId)(implicit cacheableDecoder: CacheableEntityDecoder[A]): Option[A] =
       cacheableDecoder match {
-        case decoder: CacheableEntityDecoder.Yes[A] => cache.get(CacheKey(entityId, decoder)).map(_.asInstanceOf[A])
-        case _:       CacheableEntityDecoder.No[A]  => None
+        case decoder: CacheableEntityDecoder.Yes[A] =>
+          cache.get(CacheKey(entityId, decoder)).map(_.asInstanceOf[A])
+        case _: CacheableEntityDecoder.No[A] => None
       }
 
     override def offer[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder[A]): A =
