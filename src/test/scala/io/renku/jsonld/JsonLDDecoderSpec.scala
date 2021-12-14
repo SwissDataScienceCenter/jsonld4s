@@ -387,14 +387,11 @@ class JsonLDDecoderSpec
         .as(decodeList(decoder)) shouldBe List(child).asRight
     }
 
-    "decode an entity if it matches given predicate" in {
+    "decode an entity if it matches the given predicate" in {
 
       val matchingName = nonEmptyStrings().generateOne
-      val predicate: Cursor => JsonLDDecoder.Result[Boolean] = cursor =>
-        for {
-          types <- cursor.getEntityTypes
-          name  <- cursor.downField(schema / "name").as[String]
-        } yield types.contains(EntityTypes.of(schema / "Child")) && name == matchingName
+      val predicate: Cursor => JsonLDDecoder.Result[Boolean] =
+        _.downField(schema / "name").as[String].map(_ == matchingName)
 
       val decoder: JsonLDEntityDecoder[Child] = JsonLDDecoder.entity(EntityTypes.of(schema / "Child"), predicate) {
         _.downField(schema / "name").as[String] map Child.apply
@@ -406,6 +403,75 @@ class JsonLDDecoderSpec
         .fold(fail(_), identity)
         .cursor
         .as[List[Child]](decodeList(decoder)) shouldBe List(Child(matchingName)).asRight
+    }
+
+    "skip over entities that do not match the given predicate" in {
+
+      val matchingName = nonEmptyStrings().generateOne
+      val predicate: Cursor => JsonLDDecoder.Result[Boolean] =
+        _.downField(schema / "name").as[String].map(_ == matchingName)
+
+      val parentDecoder: JsonLDEntityDecoder[Parent] = JsonLDDecoder.entity(Parent.entityTypes, predicate) { cursor =>
+        for {
+          id    <- cursor.downEntityId.as[EntityId]
+          types <- cursor.getEntityTypes
+          name  <- cursor.downField(schema / "name").as[String]
+          child <- cursor.downField(schema / "child").as[Child]
+        } yield Parent(id, types, name, child)
+      }
+
+      implicit lazy val parentsDecoder: JsonLDEntityDecoder[Parents] =
+        JsonLDDecoder.entity(EntityTypes.of(schema / "Parents")) { cursor =>
+          for {
+            id      <- cursor.downEntityId.as[EntityId]
+            parents <- cursor.downField(schema / "parents").as(decodeList(parentDecoder))
+          } yield Parents(id, parents)
+        }
+
+      val child = Child("child")
+
+      val parents = Parents(Parent(nonEmptyStrings().generateOne, child), Parent(matchingName, child))
+
+      parents.asJsonLD.flatten
+        .fold(fail(_), identity)
+        .cursor
+        .as[List[Parents]] shouldBe List(Parents(Parent(matchingName, child))).asRight
+    }
+
+    "skip over entities for which the given predicate fails to evaluate" in {
+
+      val matchingName = nonEmptyStrings().generateOne
+      val predicate: Cursor => JsonLDDecoder.Result[Boolean] =
+        _.downField(schema / "name").as[String].flatMap {
+          case `matchingName` => true.asRight
+          case _              => DecodingFailure("Predicate fails for not matching name", Nil).asLeft
+        }
+
+      val parentDecoder: JsonLDEntityDecoder[Parent] = JsonLDDecoder.entity(Parent.entityTypes, predicate) { cursor =>
+        for {
+          id    <- cursor.downEntityId.as[EntityId]
+          types <- cursor.getEntityTypes
+          name  <- cursor.downField(schema / "name").as[String]
+          child <- cursor.downField(schema / "child").as[Child]
+        } yield Parent(id, types, name, child)
+      }
+
+      implicit lazy val parentsDecoder: JsonLDEntityDecoder[Parents] =
+        JsonLDDecoder.entity(EntityTypes.of(schema / "Parents")) { cursor =>
+          for {
+            id      <- cursor.downEntityId.as[EntityId]
+            parents <- cursor.downField(schema / "parents").as(decodeList(parentDecoder))
+          } yield Parents(id, parents)
+        }
+
+      val child = Child("child")
+
+      val parents = Parents(Parent(nonEmptyStrings().generateOne, child), Parent(matchingName, child))
+
+      parents.asJsonLD.flatten
+        .fold(fail(_), identity)
+        .cursor
+        .as[List[Parents]] shouldBe List(Parents(Parent(matchingName, child))).asRight
     }
 
     "decode entities with reverse" in {

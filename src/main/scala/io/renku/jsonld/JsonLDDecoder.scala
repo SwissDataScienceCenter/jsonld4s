@@ -225,7 +225,7 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
           for {
             ids            <- array.cursor.as[List[EntityId]]
             entityOrCached <- (ids map fromCacheOrFromAllEntities(cursor)).sequence
-            filtered       <- entityOrCached.map(entitiesFor(itemDecoder)).sequence.map(_.collect(matchingEntities))
+            filtered       <- entityOrCached.map(entitiesFor(itemDecoder)).collect(matchingEntities).asRight
             decoded        <- filtered.map(decode(cursor.downTo)).sequence
           } yield decoded
         case itemDecoder: JsonLDDecoder[I] =>
@@ -246,13 +246,13 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
 
   private def entitiesFor(
       decoder: JsonLDEntityDecoder[I]
-  ): Either[JsonLDEntity, I] => Result[(Boolean, Either[JsonLDEntity, I])] = {
-    case entityOrCached @ Right(_) => (true -> entityOrCached).asRight
+  ): Either[JsonLDEntity, I] => (Boolean, Either[JsonLDEntity, I]) = {
+    case entityOrCached @ Right(_) => true -> entityOrCached
     case entityOrCached @ Left(entity) =>
-      (
-        decoder.allowedEntityTypes.exists(allowed => entity.entityTypes.exists(_ contains allowed)).asRight ->
-          decoder.predicate(entity.cursor)
-      ).mapN(_ && _).map(_ -> entityOrCached)
+      val typesAndPredicateOK =
+        decoder.allowedEntityTypes.exists(allowed => entity.entityTypes.exists(_ contains allowed)) &&
+          decoder.predicate(entity.cursor).fold(_ => false, identity)
+      typesAndPredicateOK -> entityOrCached
   }
 
   private def matchingEntities: PartialFunction[(Boolean, Either[JsonLDEntity, I]), Either[JsonLDEntity, I]] = {
@@ -261,9 +261,11 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
 
   private def decode(cursorFactory: JsonLDEntity => Cursor): Either[JsonLDEntity, I] => Result[I] = {
     case Right(cached) => cached.asRight[DecodingFailure]
-    case Left(entity) =>
+    case Left(entity @ JsonLDEntity(id, _, _, _)) =>
       val cursor = cursorFactory(entity)
-      itemDecoder(cursor).flatTap(cursor.cache(entity, _, itemDecoder).asRight)
+      itemDecoder(cursor)
+        .leftMap(failure => DecodingFailure(show"Cannot decode entity with $id: $failure", Nil))
+        .flatTap(cursor.cache(entity, _, itemDecoder).asRight)
   }
 
   private def decodeIfFlattenedCursor(cursor: FlattenedJsonCursor): Result[List[I]] = cursor.jsonLD match {
@@ -304,7 +306,7 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
   ) = for {
     allEntitiesMap <- jsons.toList.map(_.cursor.as[(EntityId, JsonLDEntity)]).sequence
     entityOrCached <- (allEntitiesMap map tryCache(cursor)).sequence
-    filtered       <- entityOrCached.map(entitiesFor(decoder)).sequence.map(_.collect(matchingEntities))
+    filtered       <- entityOrCached.map(entitiesFor(decoder)).collect(matchingEntities).asRight
     decoded        <- filtered.map(decode(cursorFactory(allEntitiesMap.toMap))).sequence
   } yield decoded
 
