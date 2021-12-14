@@ -35,6 +35,8 @@ abstract class Cursor(implicit decodingCache: DecodingCache) extends Caching(dec
 
   def top: Option[JsonLD]
 
+  def focusTop: Cursor
+
   def as[T](implicit decoder: JsonLDDecoder[T]): JsonLDDecoder.Result[T] = decoder(this) match {
     case result @ Right(_) => result
     case failure           => tryDecodeSingleItemArray(failure)
@@ -123,9 +125,10 @@ object Cursor {
 
   private[jsonld] final case class Empty(maybeMessage: Option[String])(implicit decodingCache: DecodingCache)
       extends Cursor {
-    override lazy val jsonLD: JsonLD         = JsonLD.JsonLDNull
-    override lazy val delete: Cursor         = this
-    override lazy val top:    Option[JsonLD] = None
+    override lazy val jsonLD:   JsonLD         = JsonLD.JsonLDNull
+    override lazy val delete:   Cursor         = this
+    override lazy val top:      Option[JsonLD] = None
+    override lazy val focusTop: Cursor         = this
   }
 
   private[jsonld] object Empty {
@@ -141,8 +144,9 @@ object Cursor {
   }
 
   private[jsonld] final case class TopCursor(jsonLD: JsonLD)(implicit decodingCache: DecodingCache) extends Cursor {
-    override lazy val delete: Cursor         = Empty()
-    override lazy val top:    Option[JsonLD] = Some(jsonLD)
+    override lazy val delete:   Cursor         = Empty()
+    override lazy val top:      Option[JsonLD] = Some(jsonLD)
+    override lazy val focusTop: Cursor         = this
   }
 
   private[jsonld] final case class FlattenedJsonCursor(
@@ -153,6 +157,12 @@ object Cursor {
       extends Cursor {
     override lazy val delete: Cursor         = Empty()
     override lazy val top:    Option[JsonLD] = parent.top
+    override lazy val focusTop: Cursor = top
+      .map {
+        case jsonLD: JsonLDArray => FlattenedArrayCursor(this, jsonLD, allEntities)
+        case jsonLD => TopCursor(jsonLD)
+      }
+      .getOrElse(this)
 
     def downTo(jsonLD: JsonLDEntity): FlattenedJsonCursor = FlattenedJsonCursor(this, jsonLD, allEntities)
 
@@ -188,19 +198,22 @@ object Cursor {
       case json @ JsonLDEntity(_, _, properties, _) =>
         Some(json.copy(properties = properties.removed(property)))
     }
+    override lazy val focusTop: Cursor = top.map(TopCursor(_)).getOrElse(this)
   }
 
   private[jsonld] final case class PropertyCursor(parent: Cursor, property: Property, jsonLD: JsonLD)(implicit
       decodingCache:                                      DecodingCache
   ) extends Cursor {
-    override lazy val delete: Cursor         = DeletedPropertyCursor(parent, property)
-    override lazy val top:    Option[JsonLD] = parent.top
+    override lazy val delete:   Cursor         = DeletedPropertyCursor(parent, property)
+    override lazy val top:      Option[JsonLD] = parent.top
+    override lazy val focusTop: Cursor         = top.map(TopCursor(_)).getOrElse(this)
   }
 
   private[jsonld] final case class ListItemCursor(parent: Cursor, jsonLD: JsonLD)(implicit decodingCache: DecodingCache)
       extends Cursor {
-    override lazy val top:    Option[JsonLD] = parent.top
-    override lazy val delete: Cursor         = Empty()
+    override lazy val delete:   Cursor         = Empty()
+    override lazy val top:      Option[JsonLD] = parent.top
+    override lazy val focusTop: Cursor         = top.map(TopCursor(_)).getOrElse(this)
   }
 
   private[jsonld] object ListItemCursor {
@@ -210,8 +223,9 @@ object Cursor {
   private[jsonld] final case class ArrayCursor(parent: Cursor, jsonLD: JsonLDArray)(implicit
       decodingCache:                                   DecodingCache
   ) extends Cursor {
-    override lazy val top:    Option[JsonLD] = parent.top
-    override lazy val delete: Cursor         = Empty()
+    override lazy val delete:   Cursor         = Empty()
+    override lazy val top:      Option[JsonLD] = parent.top
+    override lazy val focusTop: Cursor         = top.map(TopCursor(_)).getOrElse(this)
   }
 
   private[jsonld] final case class FlattenedArrayCursor(parent:      Cursor,
@@ -219,8 +233,14 @@ object Cursor {
                                                         allEntities: Map[EntityId, JsonLDEntity]
   )(implicit decodingCache:                                          DecodingCache)
       extends Cursor {
-    override lazy val top:    Option[JsonLD] = parent.top
     override lazy val delete: Cursor         = Empty()
+    override lazy val top:    Option[JsonLD] = parent.top
+    override lazy val focusTop: Cursor = top
+      .map {
+        case jsonLD: JsonLDArray => FlattenedArrayCursor(this, jsonLD, allEntities)
+        case jsonLD => TopCursor(jsonLD)
+      }
+      .getOrElse(this)
 
     def downTo(jsonLD: JsonLD): FlattenedJsonCursor = FlattenedJsonCursor(this, jsonLD, allEntities)
   }

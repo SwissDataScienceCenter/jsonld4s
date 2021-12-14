@@ -104,8 +104,9 @@ object JsonLDDecoder {
   }
 
   implicit val decodeEntityId: JsonLDDecoder[EntityId] = _.jsonLD match {
-    case JsonLDEntityId(value) => Right(value)
-    case json                  => DecodingFailure(s"Cannot decode ${ShowTypeName(json)} to EntityId", Nil).asLeft
+    case JsonLDEntityId(id)        => Right(id)
+    case JsonLDEntity(id, _, _, _) => Right(id)
+    case json                      => DecodingFailure(s"Cannot decode ${ShowTypeName(json)} to EntityId", Nil).asLeft
   }
 
   implicit val decodeEntityTypes: JsonLDDecoder[EntityTypes] = _.jsonLD match {
