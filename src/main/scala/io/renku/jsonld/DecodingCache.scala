@@ -24,16 +24,29 @@ trait DecodingCache {
 }
 
 object DecodingCache {
+
   val empty: DecodingCache = new ByEntityId()
 
   private class ByEntityId() extends DecodingCache {
 
+    import collection.mutable
+
+    private case class CacheKey(entityId: EntityId, decoder: CacheableEntityDecoder.Yes[_])
+
+    private val cache: mutable.Map[CacheKey, Any] = mutable.Map.empty[CacheKey, Any]
+
     override def get[A](entityId: EntityId)(implicit cacheableDecoder: CacheableEntityDecoder[A]): Option[A] =
       cacheableDecoder match {
-        case _: CacheableEntityDecoder.Yes[A] => None
-        case _: CacheableEntityDecoder.No[A]  => None
+        case decoder: CacheableEntityDecoder.Yes[A] => cache.get(CacheKey(entityId, decoder)).map(_.asInstanceOf[A])
+        case _:       CacheableEntityDecoder.No[A]  => None
       }
 
-    override def offer[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder[A]) = obj
+    override def offer[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder[A]): A =
+      cacheableDecoder match {
+        case decoder: CacheableEntityDecoder.Yes[A] =>
+          cache.addOne(CacheKey(entityId, decoder) -> obj)
+          obj
+        case _: CacheableEntityDecoder.No[A] => obj
+      }
   }
 }
