@@ -74,7 +74,24 @@ JsonLD
   .as[User]
 ```
 
-Conditional decoding is also supported. For details see `src/examples/scala/examples/ConditionalDecoding.scala`
+#### Conditional decoding
+
+jsold4s allows defining predicates on Entity Decoders. Predicates along Entity Types work as filters in the decoding process so if there's an Entity with correct type but condition encoded in the predicate is not met on it, the entity will be skipped. An example where predicates come handy might be situation of multiple implementation of a type where each implementation differs in properties or property value.
+
+Predicates are functions of type `Cursor => JsonLDDecoder.Result[Boolean]` to give user great flexibility. An example of a predicate verifying if a `schema:name` property on an Entity matches the value might be:
+
+```scala
+val predicate: Cursor => JsonLDDecoder.Result[Boolean] =
+  _.downField(schema / "name").as[String].map(_ == "some arbitrary name")
+```
+
+For more details see: `src/examples/scala/examples/ConditionalDecoding.scala`
+
+#### Cacheable entities
+
+Decoding big json-ld payloads into model classes may sometimes result in less satisfying performance. The library gives a tool for specifying, so called `Cacheable Entities`. Entities marked as cacheable are put into internal cache when decoded for the first time. Later, when the same entity is found in other places in the model hierarchy, the decoded instance is taken from the cache rather than being decoded again. Marking an Entity as cacheable might give benefits, however, the feature has to be used wisely as adding all entities to the cache, even if they occur in the payload only once, may lead to performance which is even worse than if there's no cache at all. The reason for that is the size of the cache. If size of the cache grows, the cache simply becomes slower. So a reasonable approach is to mark cacheable only these Entities which instances either occur many times in the payload or at least twice but they are very costly to decode.
+
+Defining a cacheable entity is simple. It requires `JsonLDDecoder.cacheableEntity` instead of `JsonLDDecoder.entity`. The signatures of both factories are the same.
 
 ## Parsing
 
