@@ -3,7 +3,6 @@ package examples
 import examples.ExampleSchemas.schema
 import io.renku.jsonld.parser._
 import io.renku.jsonld.{EntityTypes, JsonLD, JsonLDDecoder}
-import org.scalatest.matchers.should
 import org.scalatest.wordspec.AnyWordSpec
 
 class BasicDecoding extends AnyWordSpec {
@@ -53,9 +52,8 @@ class BasicDecoding extends AnyWordSpec {
 
   private val result: Either[ParsingFailure, JsonLD] = parse(input)
   assert(
-    result.flatMap((json: JsonLD) => (json.cursor.as[List[Project]])) == Right(
+    result.flatMap((json: JsonLD) => json.cursor.as[List[Project]]) == Right(
       List(Project("MyProject", List(User("User1"), User("User2"))))
     )
   )
-
 }

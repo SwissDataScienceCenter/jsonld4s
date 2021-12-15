@@ -44,7 +44,7 @@ private object Flatten {
 
   private def extractEntityProperties(properties: Map[Property, JsonLD]) =
     properties.foldLeft(List.empty[JsonLDEntity]) {
-      case (acc, (_, nestedEntity: JsonLDEntity)) => nestedEntity +: acc
+      case (acc, (_, nestedEntity: JsonLDEntity)) => nestedEntity :: acc
       case (acc, (_, array: JsonLDArray)) =>
         array.jsons.collect { case entity: JsonLDEntity => entity }.toList ++ acc
       case (acc, _) => acc
@@ -52,7 +52,7 @@ private object Flatten {
 
   private def extractReverseProperties(properties: Map[Property, JsonLD]): List[JsonLDEntity] =
     properties.foldLeft(List.empty[JsonLDEntity]) {
-      case (acc, (_, nestedEntity: JsonLDEntity)) => nestedEntity +: acc
+      case (acc, (_, nestedEntity: JsonLDEntity)) => nestedEntity :: acc
       case (acc, (_, array: JsonLDArray)) =>
         array.jsons.collect { case entity: JsonLDEntity => entity }.toList ++ acc
       case (acc, (_, _)) => acc

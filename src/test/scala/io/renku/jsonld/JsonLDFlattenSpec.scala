@@ -88,7 +88,7 @@ class JsonLDFlattenSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
 
             val Right(actual) = grandparentWithChild.flatten
             actual.toJson.asArray.get should contain theSameElementsAs {
-              JsonLD.arr(flattenedGrandparent +: flattenedParent +: children: _*).toJson.asArray.get
+              JsonLD.arr(flattenedGrandparent :: flattenedParent :: children: _*).toJson.asArray.get
             }
         }
       }
@@ -120,7 +120,7 @@ class JsonLDFlattenSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
           case (property, entity) =>
             (property, entity.copy(properties = newProperties))
         }
-        val childrenWithModified        = modifiedChild +: childrenTuples.tail
+        val childrenWithModified        = modifiedChild :: childrenTuples.tail
         val parent0WithNormalChildren   = parent0.add(childrenTuples)
         val parent1WithModifiedChildren = parent1.add(childrenWithModified)
 
@@ -333,7 +333,7 @@ class JsonLDFlattenSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
         case (property, entity) =>
           (property, entity.copy(properties = newProperties))
       }
-      val childrenWithModified        = modifiedChild +: childrenTuples.tail
+      val childrenWithModified        = modifiedChild :: childrenTuples.tail
       val parent0WithNormalChildren   = parent0.add(childrenTuples)
       val parent1WithModifiedChildren = parent1.add(childrenWithModified)
 
