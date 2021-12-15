@@ -314,7 +314,7 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
       val obj      = nonEmptyStrings().generateOne
 
       (decodingCache
-        .offer[String](_: EntityId, _: String)(_: CacheableEntityDecoder[String]))
+        .put[String](_: EntityId, _: String)(_: CacheableEntityDecoder[String]))
         .expects(entityId, obj, decoder.cacheableDecoder)
         .returning(obj)
 
@@ -341,7 +341,7 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
       val obj      = nonEmptyStrings().generateOne
 
       (decodingCache
-        .offer[String](_: EntityId, _: String)(_: CacheableEntityDecoder[String]))
+        .put[String](_: EntityId, _: String)(_: CacheableEntityDecoder[String]))
         .expects(entityId, obj, decoder.cacheableDecoder)
         .returning(obj)
 
@@ -359,7 +359,7 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
       val obj                                = nonEmptyStrings().generateOne
 
       (decodingCache
-        .offer[String](_: EntityId, _: String)(_: CacheableEntityDecoder[String]))
+        .put[String](_: EntityId, _: String)(_: CacheableEntityDecoder[String]))
         .expects(id, obj, decoder.cacheableDecoder)
         .returning(obj)
 
@@ -396,7 +396,7 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
       val obj                                = nonEmptyStrings().generateOne
 
       (decodingCache
-        .offer[String](_: EntityId, _: String)(_: CacheableEntityDecoder[String]))
+        .put[String](_: EntityId, _: String)(_: CacheableEntityDecoder[String]))
         .expects(id, obj, decoder.cacheableDecoder)
         .returning(obj)
 

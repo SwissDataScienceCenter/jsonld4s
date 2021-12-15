@@ -197,9 +197,9 @@ class JsonLDEntityDecoder[A](
   }
 }
 
-private[jsonld] trait CacheableEntityDecoder[A] extends Product with Serializable
+private[jsonld] sealed trait CacheableEntityDecoder[A] extends Product with Serializable
 
-object CacheableEntityDecoder {
+private[jsonld] object CacheableEntityDecoder {
 
   def yes[A]: JsonLDEntityDecoder[A] => CacheableEntityDecoder.Yes[A] = Yes(_)
   def no[A]:  JsonLDEntityDecoder[_] => CacheableEntityDecoder.No[A]  = _ => No[A]()

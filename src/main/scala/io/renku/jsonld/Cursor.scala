@@ -270,7 +270,7 @@ private[jsonld] sealed abstract class Caching(private[jsonld] val decodingCache:
   }
 
   def cache[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder[A]): A =
-    decodingCache.offer(entityId, obj)
+    decodingCache.put(entityId, obj)
 
   def cache[A](json: JsonLD, obj: A, decoder: JsonLDDecoder[A]): A = json match {
     case entity: JsonLDEntity => cache(entity, obj, decoder)

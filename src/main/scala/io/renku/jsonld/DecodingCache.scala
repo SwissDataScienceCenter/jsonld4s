@@ -20,7 +20,7 @@ package io.renku.jsonld
 
 trait DecodingCache {
   def get[A](entityId: EntityId)(implicit cacheableDecoder: CacheableEntityDecoder[A]): Option[A]
-  def offer[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder[A]): A
+  def put[A](entityId: EntityId, obj:                       A)(implicit cacheableDecoder: CacheableEntityDecoder[A]): A
 }
 
 object DecodingCache {
@@ -42,7 +42,7 @@ object DecodingCache {
         case _: CacheableEntityDecoder.No[A] => None
       }
 
-    override def offer[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder[A]): A =
+    override def put[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder[A]): A =
       cacheableDecoder match {
         case decoder: CacheableEntityDecoder.Yes[A] =>
           cache.addOne(CacheKey(entityId, decoder) -> obj)

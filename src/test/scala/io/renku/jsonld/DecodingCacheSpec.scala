@@ -29,13 +29,13 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 class DecodingCacheSpec extends AnyWordSpec with should.Matchers with ScalaCheckPropertyChecks {
 
-  "get and offer" should {
+  "get and put" should {
 
     "cache the value for a CacheableEntityDecoder" in new TestCase {
       forAll { (entityId: EntityId, obj: Int) =>
         implicit val cacheableDecoder: CacheableEntityDecoder[Int] = newCacheableDecoder()
 
-        cache.offer(entityId, obj) shouldBe obj
+        cache.put(entityId, obj) shouldBe obj
 
         cache.get(entityId) shouldBe Some(obj)
       }
@@ -45,7 +45,7 @@ class DecodingCacheSpec extends AnyWordSpec with should.Matchers with ScalaCheck
       forAll { (entityId: EntityId, obj: Int) =>
         implicit val nonCacheableDecoder: CacheableEntityDecoder[Int] = newNonCacheableDecoder()
 
-        cache.offer(entityId, obj) shouldBe obj
+        cache.put(entityId, obj) shouldBe obj
 
         cache.get(entityId) shouldBe None
       }
@@ -64,9 +64,9 @@ class DecodingCacheSpec extends AnyWordSpec with should.Matchers with ScalaCheck
       val nonCacheableDecoder: CacheableEntityDecoder[Int] = newNonCacheableDecoder()
       val nonCachedObj = Arbitrary.arbInt.arbitrary.generateOne
 
-      cache.offer(entityId, obj1)(cacheableDecoder1)           shouldBe obj1
-      cache.offer(entityId, obj2)(cacheableDecoder2)           shouldBe obj2
-      cache.offer(entityId, nonCachedObj)(nonCacheableDecoder) shouldBe nonCachedObj
+      cache.put(entityId, obj1)(cacheableDecoder1)           shouldBe obj1
+      cache.put(entityId, obj2)(cacheableDecoder2)           shouldBe obj2
+      cache.put(entityId, nonCachedObj)(nonCacheableDecoder) shouldBe nonCachedObj
 
       cache.get(entityId)(cacheableDecoder1)   shouldBe Some(obj1)
       cache.get(entityId)(cacheableDecoder2)   shouldBe Some(obj2)
