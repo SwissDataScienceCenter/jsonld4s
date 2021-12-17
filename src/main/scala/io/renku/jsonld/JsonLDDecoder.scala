@@ -272,7 +272,7 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
     case entity @ JsonLDEntity(entityId, _, _, _) =>
       cursor.findInCache(itemDecoder) match {
         case Some(fromCache) => fromCache.asRight.map(List(_))
-        case None            => entity.cursor.as[I].flatTap(cursor.cache(entityId, _, itemDecoder).asRight).map(List(_))
+        case None => cursor.downTo(entity).as[I].flatTap(cursor.cache(entityId, _, itemDecoder).asRight).map(List(_))
       }
     case JsonLDEntityId(entityId) =>
       cursor.findInCache(itemDecoder) match {
@@ -280,7 +280,7 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
         case _ =>
           cursor
             .findEntityById(entityId)
-            .map(_.cursor.as[I].flatTap(obj => cursor.cache(entityId, obj, itemDecoder).asRight).map(List(_)))
+            .map(cursor.downTo(_).as[I].flatTap(cursor.cache(entityId, _, itemDecoder).asRight).map(List(_)))
             .getOrElse(DecodingFailure(show"Cannot find entity with $entityId", Nil).asLeft)
       }
     case jsonLD => DecodingFailure(s"Cannot decode ${ShowTypeName(jsonLD)} to List", Nil).asLeft

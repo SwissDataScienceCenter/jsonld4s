@@ -48,8 +48,8 @@ abstract class Cursor(implicit decodingCache: DecodingCache) extends Caching(dec
         case jsons if jsons.isEmpty => failure
         case json +: tail if tail.isEmpty =>
           this match {
-            case cursor @ FlattenedArrayCursor(_, _, allEntities) =>
-              decoder(FlattenedJsonCursor(cursor, json, allEntities))
+            case cursor: FlattenedArrayCursor => decoder(cursor downTo json)
+            case cursor: FlattenedJsonCursor  => decoder(cursor downTo json)
             case _ => decoder(ListItemCursor(this, json))
           }
         case _ => failure
@@ -164,7 +164,7 @@ object Cursor {
       }
       .getOrElse(this)
 
-    def downTo(jsonLD: JsonLDEntity): FlattenedJsonCursor = FlattenedJsonCursor(this, jsonLD, allEntities)
+    def downTo(jsonLD: JsonLD): FlattenedJsonCursor = FlattenedJsonCursor(this, jsonLD, allEntities)
 
     def findEntity(entityTypes: EntityTypes, predicate: Cursor => Result[Boolean]): Option[JsonLDEntity] =
       jsonLD match {
