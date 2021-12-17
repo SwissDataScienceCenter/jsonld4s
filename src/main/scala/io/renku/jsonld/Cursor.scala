@@ -166,22 +166,19 @@ object Cursor {
 
     def downTo(jsonLD: JsonLDEntity): FlattenedJsonCursor = FlattenedJsonCursor(this, jsonLD, allEntities)
 
-    def findEntity(entityTypes: EntityTypes, predicate: Cursor => Result[Boolean]): Option[Result[JsonLDEntity]] =
+    def findEntity(entityTypes: EntityTypes, predicate: Cursor => Result[Boolean]): Option[JsonLDEntity] =
       jsonLD match {
-        case JsonLDEntityId(entityId) =>
-          allEntities.get(entityId).filter(by(entityTypes)).findM(entity => predicate(entity.cursor)).sequence
-        case entity @ JsonLDEntity(_, types, _, _) if types contains entityTypes => check(predicate)(entity)
-        case _                                                                   => None
+        case JsonLDEntityId(entityId) => allEntities.get(entityId).filter(by(entityTypes)).filter(by(predicate))
+        case entity: JsonLDEntity => Some(entity).filter(by(entityTypes)).filter(by(predicate))
+        case _ => None
       }
 
     def findEntityById(entityId: EntityId): Option[JsonLDEntity] = allEntities.get(entityId)
 
     private def by(entityTypes: EntityTypes): JsonLDEntity => Boolean = _.types contains entityTypes
 
-    private def check(
-        predicate: Cursor => JsonLDDecoder.Result[Boolean]
-    ): JsonLDEntity => Option[JsonLDDecoder.Result[JsonLDEntity]] =
-      entity => predicate(entity.cursor).map(Option.when(_)(entity)).sequence
+    private def by(predicate: Cursor => Result[Boolean]): JsonLDEntity => Boolean = entity =>
+      predicate(entity.cursor).fold(_ => false, identity)
   }
 
   private[jsonld] object FlattenedJsonCursor {

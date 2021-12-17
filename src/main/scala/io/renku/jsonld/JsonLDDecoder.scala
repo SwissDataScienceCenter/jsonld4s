@@ -184,10 +184,10 @@ class JsonLDEntityDecoder[A](
       case _ =>
         cursor
           .findEntity(entityTypes, predicate)
-          .map(_ >>= { case entityJson @ JsonLDEntity(id, _, _, _) =>
+          .map { case entityJson @ JsonLDEntity(id, _, _, _) =>
             val cursorDown = cursor.downTo(entityJson)
             goDownType(cursorDown).flatTap(obj => cursorDown.cache(id, obj).asRight)
-          })
+          }
     }
 
   protected def goDownType(cursor: Cursor): Result[A] = cursor.downType(entityTypes) match {
