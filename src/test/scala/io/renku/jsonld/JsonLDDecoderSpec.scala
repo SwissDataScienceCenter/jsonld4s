@@ -172,6 +172,47 @@ class JsonLDDecoderSpec
       container.asJsonLD.cursor.as[ValuesContainer] shouldBe container.asRight
     }
 
+    "fail with a meaningful message when decoding a value when there's list of values fails" in {
+      val failureMessage = "Tag cannot be empty"
+      val tagDecoder     = JsonLDDecoder.decodeString.emap(v => Either.cond(v.nonEmpty, v, failureMessage))
+      val containerDecoder: JsonLDDecoder[ValuesContainer] =
+        JsonLDDecoder.entity(EntityTypes.of(schema / "ValuesContainer")) { cursor =>
+          for {
+            name <- cursor.downField(schema / "name").as[String]
+            tags <- cursor.downField(schema / "tags").as(decodeList(tagDecoder))
+          } yield ValuesContainer(name, tags)
+        }
+
+      val Left(decodingFailure) = ValuesContainer("container", List("")).asJsonLD.cursor.as(containerDecoder)
+
+      decodingFailure              shouldBe a[DecodingFailure]
+      decodingFailure.getMessage() shouldBe failureMessage
+    }
+
+    "fail with a meaningful message when decoding a value when there's list of values fails " +
+      "- case of flattened json" in {
+        val failureMessage = "Tag cannot be empty"
+        val tagDecoder     = JsonLDDecoder.decodeString.emap(v => Either.cond(v.nonEmpty, v, failureMessage))
+        val containerDecoder: JsonLDDecoder[ValuesContainer] =
+          JsonLDDecoder.entity(EntityTypes.of(schema / "ValuesContainer")) { cursor =>
+            for {
+              name <- cursor.downField(schema / "name").as[String]
+              tags <- cursor.downField(schema / "tags").as(decodeList(tagDecoder))
+            } yield ValuesContainer(name, tags)
+          }
+
+        val Left(decodingFailure) = JsonLD
+          .arr(ValuesContainer("container", List("")).asJsonLD, Child("child").asJsonLD)
+          .flatten
+          .fold(throw _, identity)
+          .cursor
+          .as(decodeList(containerDecoder))
+
+        decodingFailure shouldBe a[DecodingFailure]
+        decodingFailure
+          .getMessage() shouldBe show"Cannot decode entity with container/container: ${DecodingFailure(failureMessage, Nil)}"
+      }
+
     "decode entity with a single value property when encoded as a single value array" in {
       val childEncoder = JsonLDEncoder.instance[Child](child =>
         JsonLD.entity(EntityId.of(s"child/${child.name}"),

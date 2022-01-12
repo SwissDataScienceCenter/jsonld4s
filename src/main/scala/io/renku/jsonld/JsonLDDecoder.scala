@@ -283,7 +283,8 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
             .map(cursor.downTo(_).as[I].flatTap(cursor.cache(entityId, _, itemDecoder).asRight).map(List(_)))
             .getOrElse(DecodingFailure(show"Cannot find entity with $entityId", Nil).asLeft)
       }
-    case jsonLD => DecodingFailure(s"Cannot decode ${ShowTypeName(jsonLD)} to List", Nil).asLeft
+    case JsonLDArray(jsons) => jsons.toList.map(cursor.downTo).map(_.as[I]).sequence
+    case _                  => cursor.as[I].map(List(_))
   }
 
   private def decodeIfArrayCursor: ArrayCursor => Result[List[I]] = {
@@ -294,7 +295,6 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
         case decoder =>
           jsons.toList
             .map(json => decoder(ListItemCursor.from(cursor, json)).flatTap(cursor.cache(json, _, decoder).asRight))
-            .filter(_.isRight)
             .sequence
       }
   }
