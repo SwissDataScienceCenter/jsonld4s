@@ -106,26 +106,25 @@ class JsonLDFlattenSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
           grandParent.add(List(properties.generateOne -> parent0, properties.generateOne -> parent1WithModifiedChild))
 
         grandParentWithModifiedChildren.flatten shouldBe Left(
-          MalformedJsonLD("Some entities share an ID even though they're not the same")
+          MalformedJsonLD(s"Not equal entity(ies) in json-ld: ${parent0.entityId.getOrElse("")}")
         )
       }
-
     }
 
     "should fail if there are two unequal entities with the same EntityId in the nested structure" in {
       forAll { (parent0: JsonLDEntity, parent1: JsonLDEntity) =>
         val childrenTuples = entityProperties.generateNonEmptyList().toList
         val newProperties  = valuesProperties.generateNonEmptyMap()
-        val modifiedChild = childrenTuples.head match {
+        val modifiedChild @ (_, modifiedChildEntity) = childrenTuples.head match {
           case (property, entity) =>
             (property, entity.copy(properties = newProperties))
         }
         val childrenWithModified        = modifiedChild :: childrenTuples.tail
-        val parent0WithNormalChildren   = parent0.add(childrenTuples)
+        val parent0WithChildren         = parent0.add(childrenTuples)
         val parent1WithModifiedChildren = parent1.add(childrenWithModified)
 
-        JsonLD.arr(parent0WithNormalChildren, parent1WithModifiedChildren).flatten shouldBe Left(
-          MalformedJsonLD("Some entities share an ID even though they're not the same")
+        JsonLD.arr(parent0WithChildren, parent1WithModifiedChildren).flatten shouldBe Left(
+          MalformedJsonLD(s"Not equal entity(ies) in json-ld: ${modifiedChildEntity.entityId.getOrElse("")}")
         )
       }
     }
@@ -329,7 +328,7 @@ class JsonLDFlattenSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
       val parent1        = jsonLDEntities.generateOne
       val childrenTuples = entityProperties.generateNonEmptyList().toList
       val newProperties  = valuesProperties.generateNonEmptyMap()
-      val modifiedChild = childrenTuples.head match {
+      val modifiedChild @ (_, modifiedChildEntity) = childrenTuples.head match {
         case (property, entity) =>
           (property, entity.copy(properties = newProperties))
       }
@@ -339,9 +338,8 @@ class JsonLDFlattenSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
 
       intercept[MalformedJsonLD] {
         JsonLD.arr(parent0WithNormalChildren, parent1WithModifiedChildren).flatten.fold(throw _, identity)
-      }.getMessage shouldBe "Some entities share an ID even though they're not the same"
+      }.getMessage shouldBe s"Not equal entity(ies) in json-ld: ${modifiedChildEntity.entityId.getOrElse("")}"
     }
-
   }
 
   private lazy val entityProperties: Gen[(Property, JsonLDEntity)] = for {

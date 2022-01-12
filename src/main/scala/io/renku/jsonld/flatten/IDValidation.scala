@@ -18,18 +18,21 @@
 
 package io.renku.jsonld.flatten
 
-import io.renku.jsonld.JsonLD
+import io.renku.jsonld.{EntityId, JsonLD}
 import io.renku.jsonld.JsonLD.{JsonLDEntity, MalformedJsonLD}
 
 private object IDValidation {
 
   def checkForUniqueIds(flattenedJsons: List[JsonLD]): Either[MalformedJsonLD, List[JsonLD]] =
-    if (areIdsUnique(flattenedJsons)) Right(flattenedJsons)
-    else Left(MalformedJsonLD("Some entities share an ID even though they're not the same"))
+    findNotEqualEntities(flattenedJsons) match {
+      case Nil      => Right(flattenedJsons)
+      case entities => Left(MalformedJsonLD(s"Not equal entity(ies) in json-ld: ${entities.mkString(",")}"))
+    }
 
-  private def areIdsUnique(jsons: List[JsonLD]): Boolean =
+  private def findNotEqualEntities(jsons: List[JsonLD]): List[EntityId] =
     jsons
       .collect { case entity: JsonLDEntity => entity }
       .groupBy(entity => entity.id)
-      .forall { case (_, entitiesPerId) => entitiesPerId.forall(_ == entitiesPerId.head) }
+      .collect { case (entityId, entitiesPerId) if entitiesPerId.exists(_ != entitiesPerId.head) => entityId }
+      .toList
 }
