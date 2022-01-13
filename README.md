@@ -1,3 +1,5 @@
+<meta name='keywords' content='scala, json-ld'>
+
 # json-ld
 
 This is a Scala library to work with Json-LD. It's build on top of [Circe](https://circe.github.io/circe) and follows
