@@ -31,7 +31,7 @@ private object Flatten {
     toProcess match {
       case (entity: JsonLDEntity) :: leftToProcess =>
         val processNext =
-          extractEntityProperties(entity.properties) ++ extractReverseProperties(entity.reverse.properties)
+          extractEntityProperties(entity.properties) ::: extractReverseProperties(entity.reverse.properties)
         val (currentEntityDeNested, edges) = transformEntityProperties(entity)
         deNest(processNext ::: leftToProcess, topLevelEntities ::: currentEntityDeNested :: edges)
       case JsonLDArray(jsons) :: leftToProcess =>
@@ -46,7 +46,7 @@ private object Flatten {
     properties.foldLeft(List.empty[JsonLDEntity]) {
       case (acc, (_, nestedEntity: JsonLDEntity)) => nestedEntity :: acc
       case (acc, (_, array: JsonLDArray)) =>
-        array.jsons.collect { case entity: JsonLDEntity => entity }.toList ++ acc
+        array.jsons.collect { case entity: JsonLDEntity => entity }.toList ::: acc
       case (acc, _) => acc
     }
 
@@ -54,7 +54,7 @@ private object Flatten {
     properties.foldLeft(List.empty[JsonLDEntity]) {
       case (acc, (_, nestedEntity: JsonLDEntity)) => nestedEntity :: acc
       case (acc, (_, array: JsonLDArray)) =>
-        array.jsons.collect { case entity: JsonLDEntity => entity }.toList ++ acc
+        array.jsons.collect { case entity: JsonLDEntity => entity }.toList ::: acc
       case (acc, (_, _)) => acc
     }
 
