@@ -645,6 +645,44 @@ class JsonLDDecoderSpec
         .as[List[Parents]] shouldBe List(parents).asRight
     }
 
+    "do not use the state from previous decoding" in {
+
+      lazy val childDecoder: JsonLDEntityDecoder[Child] =
+        JsonLDDecoder.cacheableEntity(EntityTypes.of(schema / "Child")) { cursor =>
+          cursor.downField(schema / "name").as[String] map Child.apply
+        }
+
+      lazy val parentDecoder: JsonLDEntityDecoder[Parent] =
+        JsonLDDecoder.cacheableEntity(EntityTypes.of(schema / "Parent")) { cursor =>
+          for {
+            id    <- cursor.downEntityId.as[EntityId]
+            types <- cursor.getEntityTypes
+            name  <- cursor.downField(schema / "name").as[String]
+            child <- cursor.downField(schema / "child").as[Child](childDecoder)
+          } yield Parent(id, types, name, child)
+        }
+
+      implicit lazy val parentsDecoder: JsonLDEntityDecoder[Parents] =
+        JsonLDDecoder.entity(EntityTypes.of(schema / "Parents")) { cursor =>
+          for {
+            id      <- cursor.downEntityId.as[EntityId]
+            parents <- cursor.downField(schema / "parents").as(decodeList(parentDecoder))
+          } yield Parents(id, parents)
+        }
+
+      val child    = Child("child")
+      val parent1  = Parent(EntityId.of("parent/parent1"), Parent.entityTypes, "parent1", child)
+      val parent2  = Parent(EntityId.of("parent/parent2"), Parent.entityTypes, "parent2", child)
+      val parents1 = Parents(parent1, parent2)
+
+      val parent1b = Parent(EntityId.of("parent/parent1"), Parent.entityTypes, "parent3", child)
+      val parent2b = Parent(EntityId.of("parent/parent2"), Parent.entityTypes, "parent4", child)
+      val parents2 = Parents(parent1b, parent2b)
+
+      parents1.asJsonLD.flatten.fold(fail(_), identity).cursor.as[List[Parents]] shouldBe List(parents1).asRight
+      parents2.asJsonLD.flatten.fold(fail(_), identity).cursor.as[List[Parents]] shouldBe List(parents2).asRight
+    }
+
     "decode entities in cases when decoder needs to focus on the top json-ld" in {
 
       lazy val childDecoder: JsonLDEntityDecoder[Child] =

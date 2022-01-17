@@ -27,6 +27,7 @@ import java.io.Serializable
 import java.time.{Instant, LocalDate}
 
 abstract class JsonLD extends JsonLDMerge with JsonLDFlatten with Product with Serializable {
+
   def toJson: Json
 
   def entityId: Option[EntityId]
@@ -36,7 +37,6 @@ abstract class JsonLD extends JsonLDMerge with JsonLDFlatten with Product with S
   def cursor: Cursor = Cursor.from(this)
 
   def asArray: Option[Vector[JsonLD]]
-
 }
 
 object JsonLD {

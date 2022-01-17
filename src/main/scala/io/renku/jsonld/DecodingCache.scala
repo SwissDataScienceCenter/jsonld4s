@@ -25,7 +25,7 @@ trait DecodingCache {
 
 object DecodingCache {
 
-  val empty: DecodingCache = new ByEntityId()
+  def empty: DecodingCache = new ByEntityId()
 
   private class ByEntityId() extends DecodingCache {
 
