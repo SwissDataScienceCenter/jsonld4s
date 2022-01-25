@@ -140,7 +140,7 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
       forAll { value: LocalDate =>
         JsonLD.fromLocalDate(value).toJson shouldBe
           json"""{
-            "@type": "http://schema.org/Date",
+            "@type": "http://www.w3.org/2001/XMLSchema#date",
             "@value": $value
           }"""
       }

@@ -173,7 +173,7 @@ object JsonLD {
   }
 
   private[jsonld] object JsonLDLocalDateValue {
-    val entityTypes = EntityTypes.of(Schema.from("http://schema.org") / "Date")
+    val entityTypes = EntityTypes.of(Schema.from("http://www.w3.org/2001/XMLSchema", "#") / "date")
 
     def from(localDate: LocalDate): JsonLDValue[LocalDate] = JsonLDValue(localDate, entityTypes.some)
   }
