@@ -227,6 +227,17 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
       }
     }
 
+    "allow to remove a selected field if its value is an Array" in new TestCase {
+      forAll { (id: EntityId, entityTypes: EntityTypes, property1: Property, property2: (Property, JsonLD)) =>
+        JsonLD
+          .entity(id, entityTypes, property1 -> JsonLD.arr(jsonLDValues.generateOne), property2)
+          .cursor
+          .downField(property1)
+          .delete
+          .top shouldBe Some(JsonLD.entity(id, entityTypes, property2))
+      }
+    }
+
     "allow to remove a selected entity" in new TestCase {
       forAll { (id: EntityId, entityTypes: EntityTypes, property: (Property, JsonLD)) =>
         JsonLD
