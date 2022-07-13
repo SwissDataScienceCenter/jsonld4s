@@ -33,18 +33,19 @@ lazy val Examples = config("examples") extend Test
 headerSettings(Examples)
 automateHeaderSettings(Examples)
 
-val circeVersion = "0.14.1"
+val circeVersion = "0.14.2"
 libraryDependencies += "io.circe" %% "circe-core"    % circeVersion
 libraryDependencies += "io.circe" %% "circe-literal" % circeVersion
 libraryDependencies += "io.circe" %% "circe-parser"  % circeVersion
 
-libraryDependencies += "org.typelevel" %% "cats-core" % "2.6.1"
+libraryDependencies += "org.apache.jena" % "jena-core" % "4.5.0"
+libraryDependencies += "org.typelevel"  %% "cats-core" % "2.8.0"
 
 // Test dependencies
-libraryDependencies += "eu.timepit"        %% "refined"         % "0.9.27"  % Test
+libraryDependencies += "eu.timepit"        %% "refined"         % "0.10.1"  % Test
 libraryDependencies += "org.scalacheck"    %% "scalacheck"      % "1.14.3"  % Test // version 1.15.1 is broken
-libraryDependencies += "org.scalamock"     %% "scalamock"       % "5.1.0"   % Test
-libraryDependencies += "org.scalatest"     %% "scalatest"       % "3.2.10"  % Test
+libraryDependencies += "org.scalamock"     %% "scalamock"       % "5.2.0"   % Test
+libraryDependencies += "org.scalatest"     %% "scalatest"       % "3.2.12"  % Test
 libraryDependencies += "org.scalatestplus" %% "scalacheck-1-14" % "3.2.2.0" % Test
 
 //Compile / sourceGenerators +=
