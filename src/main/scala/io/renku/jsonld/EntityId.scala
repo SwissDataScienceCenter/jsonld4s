@@ -20,6 +20,7 @@ package io.renku.jsonld
 
 import cats.Show
 import io.circe.{Decoder, Encoder, Json}
+import org.apache.jena.util.URIref
 
 import java.util.UUID
 
@@ -60,8 +61,8 @@ object EntityId {
     }
   }
 
-  implicit val stringToEntityId:   String => EntityId   = StandardEntityId.apply
-  implicit val propertyToEntityId: Property => EntityId = p => StandardEntityId(p.url)
+  implicit val stringToEntityId:   String => EntityId   = v => StandardEntityId(URIref.encode(v))
+  implicit val propertyToEntityId: Property => EntityId = p => StandardEntityId(URIref.encode(p.url))
 
   implicit val show: Show[EntityId] = Show[EntityId](entityId => entityId.valueShow.show(entityId.value))
 }

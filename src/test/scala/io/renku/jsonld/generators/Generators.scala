@@ -18,9 +18,6 @@
 
 package io.renku.jsonld.generators
 
-import java.time._
-import java.time.temporal.ChronoUnit.{DAYS, MINUTES => MINS}
-
 import cats.data.NonEmptyList
 import eu.timepit.refined.api.Refined
 import eu.timepit.refined.auto._
@@ -31,6 +28,8 @@ import io.circe.{Encoder, Json}
 import org.scalacheck.Gen._
 import org.scalacheck.{Arbitrary, Gen}
 
+import java.time._
+import java.time.temporal.ChronoUnit.{DAYS, MINUTES => MINS}
 import scala.annotation.tailrec
 import scala.concurrent.duration._
 import scala.language.{implicitConversions, postfixOps}
@@ -63,6 +62,20 @@ object Generators {
 
   def stringsOfLength(length: Int Refined Positive = 10, charsGenerator: Gen[Char] = alphaChar): Gen[String] =
     listOfN(length, charsGenerator).map(_.mkString(""))
+
+  val emails: Gen[String] = {
+    val firstCharGen    = frequency(6 -> alphaChar, 2 -> numChar, 1 -> oneOf("!#$%&*+-/=?_~".toList))
+    val nonFirstCharGen = frequency(6 -> alphaChar, 2 -> numChar, 1 -> oneOf("!#$%&*+-/=?_~.".toList))
+    val beforeAts = for {
+      firstChar  <- firstCharGen
+      otherChars <- nonEmptyList(nonFirstCharGen, minElements = 5, maxElements = 10)
+    } yield s"$firstChar${otherChars.toList.mkString("")}"
+
+    for {
+      beforeAt <- beforeAts
+      afterAt  <- nonEmptyStrings()
+    } yield s"$beforeAt@$afterAt"
+  }
 
   def paragraphs(minElements: Int Refined Positive = 5, maxElements: Int Refined Positive = 10): Gen[NonBlank] =
     nonEmptyStringsList(minElements, maxElements) map (_.mkString(" ")) map Refined.unsafeApply
