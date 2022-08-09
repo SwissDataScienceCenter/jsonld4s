@@ -56,13 +56,14 @@ object EntityId {
 
   implicit val entityIdJsonDecoder: Decoder[EntityId] = Decoder.instance {
     _.as[String].map {
-      case s if s.startsWith("_:") => EntityId.blank
-      case s                       => EntityId.of(s)
+      case s"_:${uuid}" => EntityId.BlankNodeEntityId(UUID.fromString(uuid))
+      case s            => EntityId.of(s)
     }
   }
 
   implicit val stringToEntityId:   String => EntityId   = v => StandardEntityId(URIref.encode(v))
   implicit val propertyToEntityId: Property => EntityId = p => StandardEntityId(URIref.encode(p.url))
+  implicit val schemaToEntityId:   Schema => EntityId   = s => StandardEntityId(URIref.encode(s.url))
 
   implicit val show: Show[EntityId] = Show[EntityId](entityId => entityId.valueShow.show(entityId.value))
 }

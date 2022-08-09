@@ -20,7 +20,7 @@ package io.renku.jsonld
 
 import cats.Show
 
-abstract class Schema(url: String, separator: String) extends Product with Serializable {
+abstract class Schema(val url: String, val separator: String) extends Product with Serializable {
   def /(name: String):        Property = Property(s"$url$separator$name")
   def /(name: Number):        Property = Property(s"$url$separator$name")
   def asPrefix(name: String): String   = s"PREFIX $name: <$url$separator>"
@@ -42,6 +42,6 @@ object Schema {
   def from(baseUrl: String, separator: String): Schema = CustomSeparatorSchema(baseUrl, separator)
 
   private[jsonld] final case class SlashSeparatorSchema(value: String) extends Schema(value, separator = "/")
-  private[jsonld] final case class CustomSeparatorSchema(value: String, separator: String)
+  private[jsonld] final case class CustomSeparatorSchema(value: String, override val separator: String)
       extends Schema(value, separator)
 }
