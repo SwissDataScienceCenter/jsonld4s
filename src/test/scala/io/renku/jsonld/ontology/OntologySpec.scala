@@ -344,6 +344,49 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
           Nil: _*
       )
     }
+
+    "include comments if added on Class, ObjectProperty and/or DataProperty" in {
+
+      val otherLeafType = Type.Def(
+        Class(schema / "OtherLeaf"),
+        DataProperty(schema / "name", xsd / "string").withComment("Data prop comment")
+      )
+
+      val rootType = Type.Def(
+        Class(schema / "Root", Some(Comment("Class comment"))),
+        ObjectProperty(schema / "leaf", otherLeafType, Some(Comment("Object prop comment")))
+      )
+
+      generateOntology(rootType, ontologyId) shouldBe JsonLD.arr(
+        JsonLD
+          .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
+
+          JsonLD
+            .entity(rootType.clazz.id, EntityTypes of owl / "Class", rdfs / "comment" -> "Class comment".asJsonLD) ::
+          JsonLD
+            .entity(otherLeafType.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
+
+          JsonLD
+            .entity(
+              schema / "leaf",
+              EntityTypes of owl / "ObjectProperty",
+              rdfs / "domain"  -> List(rootType.clazz.id).asJsonLD,
+              rdfs / "range"   -> List(ObjectPropertyRange(otherLeafType)).asJsonLD,
+              rdfs / "comment" -> "Object prop comment".asJsonLD
+            ) ::
+
+          JsonLD
+            .entity(
+              schema / "name",
+              EntityTypes of owl / "DatatypeProperty",
+              rdfs / "domain"  -> List(otherLeafType.clazz.id).asJsonLD,
+              rdfs / "range"   -> List(DataPropertyRange(xsd / "string")).asJsonLD,
+              rdfs / "comment" -> "Data prop comment".asJsonLD
+            ) ::
+
+          Nil: _*
+      )
+    }
   }
 
   private lazy val ontologyId = entityIds.generateOne

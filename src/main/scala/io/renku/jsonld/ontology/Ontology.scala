@@ -89,7 +89,9 @@ object Type {
   }
 }
 
-final case class Class(id: EntityId, subclass: List[SubClass])
+final case class Class(id: EntityId, subclass: List[SubClass], maybeComment: Option[Comment]) {
+  def withComment(comment: String): Class = copy(maybeComment = Some(Comment(comment)))
+}
 object Class {
 
   final case class SubClass(id: EntityId)
@@ -102,37 +104,47 @@ object Class {
     }
   }
 
-  def apply(clazz: EntityId): Class = new Class(EntityId.of(clazz), subclass = Nil)
+  def apply(clazz: EntityId, maybeComment: Option[Comment] = None): Class =
+    new Class(EntityId.of(clazz), subclass = Nil, maybeComment)
   def apply(clazz: EntityId, subClass: SubClass, otherSubClasses: SubClass*): Class =
-    new Class(EntityId.of(clazz), subclass = subClass :: otherSubClasses.toList)
+    new Class(EntityId.of(clazz), subclass = subClass :: otherSubClasses.toList, maybeComment = None)
 
-  implicit lazy val encoder: JsonLDEncoder[Class] = JsonLDEncoder.instance {
-    case Class(id, Nil) =>
-      JsonLD.entity(
-        id,
-        EntityTypes of owl / "Class",
-        Map.empty[Property, JsonLD]
-      )
-    case Class(id, subClasses) =>
-      JsonLD.entity(
-        id,
-        EntityTypes of owl / "Class",
-        rdfs / "subClassOf" -> subClasses.asJsonLD
-      )
+  implicit lazy val encoder: JsonLDEncoder[Class] = JsonLDEncoder.instance { case Class(id, subClasses, maybeComment) =>
+    JsonLD.entity(
+      id,
+      EntityTypes of owl / "Class",
+      Seq(
+        subClasses match {
+          case Nil => Option.empty[(Property, JsonLD)]
+          case _   => Some(rdfs / "subClassOf" -> subClasses.asJsonLD)
+        },
+        maybeComment.map(c => rdfs / "comment" -> c.asJsonLD)
+      ).flatten.toMap
+    )
   }
 }
 
-final case class ObjectProperty(id:          EntityId,
-                                range:       List[ObjectPropertyRange],
-                                domain:      List[Domain],
-                                subProperty: Option[TopObjectProperty]
-)
+final case class ObjectProperty(id:               EntityId,
+                                range:            List[ObjectPropertyRange],
+                                domain:           List[Domain],
+                                maybeSubProperty: Option[TopObjectProperty],
+                                maybeComment:     Option[Comment]
+) {
+  def withComment(comment: String): ObjectProperty = copy(maybeComment = Some(Comment(comment)))
+}
 
 object ObjectProperty {
 
-  final case class Def(id: EntityId, range: List[ObjectPropertyRange], subProperty: Option[TopObjectProperty]) {
+  final case class Def(id:               EntityId,
+                       range:            List[ObjectPropertyRange],
+                       maybeSubProperty: Option[TopObjectProperty],
+                       maybeComment:     Option[Comment]
+  ) {
+
+    def withComment(comment: String): Def = copy(maybeComment = Some(Comment(comment)))
+
     def of(clazz: Class): ObjectProperty =
-      ObjectProperty(id, range, domain = List(Domain(clazz)), subProperty)
+      ObjectProperty(id, range, domain = List(Domain(clazz)), maybeSubProperty, maybeComment)
   }
 
   case object TopObjectProperty {
@@ -142,26 +154,23 @@ object ObjectProperty {
   }
   type TopObjectProperty = TopObjectProperty.type
 
-  def apply(id: EntityId, range: Type): Def = Def(id, List(ObjectPropertyRange(range)), subProperty = None)
+  def apply(id: EntityId, range: Type, maybeComment: Option[Comment] = None): Def =
+    Def(id, List(ObjectPropertyRange(range)), maybeSubProperty = None, maybeComment)
 
-  def top(id: EntityId, range: Type): Def =
-    Def(id, List(ObjectPropertyRange(range)), subProperty = Some(TopObjectProperty))
+  def top(id: EntityId, range: Type, maybeComment: Option[Comment] = None): Def =
+    Def(id, List(ObjectPropertyRange(range)), maybeSubProperty = Some(TopObjectProperty), maybeComment)
 
   implicit lazy val encoder: JsonLDEncoder[ObjectProperty] = JsonLDEncoder.instance {
-    case ObjectProperty(id, range, domain, Some(topObjectProperty)) =>
+    case ObjectProperty(id, range, domain, maybeTopProperty, maybeComment) =>
       JsonLD.entity(
         id,
         EntityTypes of owl / "ObjectProperty",
-        rdfs / "domain"        -> domain.asJsonLD,
-        rdfs / "range"         -> range.asJsonLD,
-        rdfs / "subPropertyOf" -> topObjectProperty.asJsonLD
-      )
-    case ObjectProperty(id, range, domain, None) =>
-      JsonLD.entity(
-        id,
-        EntityTypes of owl / "ObjectProperty",
-        rdfs / "domain" -> domain.asJsonLD,
-        rdfs / "range"  -> range.asJsonLD
+        Seq(
+          Some(rdfs / "domain" -> domain.asJsonLD),
+          Some(rdfs / "range"  -> range.asJsonLD),
+          maybeTopProperty.map(p => rdfs / "subPropertyOf" -> p.asJsonLD),
+          maybeComment.map(c => rdfs / "comment" -> c.asJsonLD)
+        ).flatten.toMap
       )
   }
 }
@@ -179,11 +188,14 @@ object ObjectPropertyRange {
   }
 }
 
-final case class DataProperty(id:          EntityId,
-                              range:       List[DataPropertyRange],
-                              domain:      List[Domain],
-                              subProperty: Option[TopDataProperty]
-)
+final case class DataProperty(id:               EntityId,
+                              range:            List[DataPropertyRange],
+                              domain:           List[Domain],
+                              maybeSubProperty: Option[TopDataProperty],
+                              maybeComment:     Option[Comment]
+) {
+  def withComment(comment: String): DataProperty = copy(maybeComment = Some(Comment(comment)))
+}
 object DataProperty {
 
   case object TopDataProperty {
@@ -194,33 +206,44 @@ object DataProperty {
 
   type TopDataProperty = TopDataProperty.type
 
-  final case class Def(id: EntityId, range: List[DataPropertyRange], subProperty: Option[TopDataProperty]) {
-    def of(clazz: Class): DataProperty = DataProperty(id, range, domain = List(Domain(clazz)), subProperty)
+  final case class Def(id:               EntityId,
+                       range:            List[DataPropertyRange],
+                       maybeSubProperty: Option[TopDataProperty],
+                       maybeComment:     Option[Comment]
+  ) {
+
+    def withComment(comment: String): Def = copy(maybeComment = Some(Comment(comment)))
+
+    def of(clazz: Class): DataProperty =
+      DataProperty(id, range, domain = List(Domain(clazz)), maybeSubProperty, maybeComment)
   }
 
   def apply(id: EntityId, range1: Property, otherRanges: Property*): DataProperty.Def =
-    DataProperty.Def(id, (range1 :: otherRanges.toList).map(DataPropertyRange(_)), subProperty = None)
+    DataProperty.Def(id,
+                     (range1 :: otherRanges.toList).map(DataPropertyRange(_)),
+                     maybeSubProperty = None,
+                     maybeComment = None
+    )
 
   def top(id: EntityId, range1: Property, otherRanges: Property*): DataProperty.Def =
-    DataProperty.Def(id, (range1 :: otherRanges.toList).map(DataPropertyRange(_)), Some(TopDataProperty))
+    DataProperty.Def(id,
+                     (range1 :: otherRanges.toList).map(DataPropertyRange(_)),
+                     Some(TopDataProperty),
+                     maybeComment = None
+    )
 
   implicit lazy val encoder: JsonLDEncoder[DataProperty] = JsonLDEncoder.instance {
-    case DataProperty(id, range, domain, Some(topDataProperty)) =>
+    case DataProperty(id, range, domain, maybeTopProperty, maybeComment) =>
       JsonLD
         .entity(
           id,
           EntityTypes of owl / "DatatypeProperty",
-          rdfs / "domain"        -> domain.asJsonLD,
-          rdfs / "range"         -> range.asJsonLD,
-          rdfs / "subPropertyOf" -> topDataProperty.asJsonLD
-        )
-    case DataProperty(id, range, domain, None) =>
-      JsonLD
-        .entity(
-          id,
-          EntityTypes of owl / "DatatypeProperty",
-          rdfs / "domain" -> domain.asJsonLD,
-          rdfs / "range"  -> range.asJsonLD
+          Seq(
+            Some(rdfs / "domain" -> domain.asJsonLD),
+            Some(rdfs / "range"  -> range.asJsonLD),
+            maybeTopProperty.map(p => rdfs / "subPropertyOf" -> p.asJsonLD),
+            maybeComment.map(c => rdfs / "comment" -> c.asJsonLD)
+          ).flatten.toMap
         )
   }
 }
@@ -242,4 +265,9 @@ object DataPropertyRange {
   implicit lazy val encoder: JsonLDEncoder[DataPropertyRange] = JsonLDEncoder.instance { case DataPropertyRange(id) =>
     JsonLD.fromEntityId(id)
   }
+}
+
+final case class Comment(value: String)
+object Comment {
+  implicit lazy val encoder: JsonLDEncoder[Comment] = JsonLDEncoder.encodeString.contramap(_.value)
 }
