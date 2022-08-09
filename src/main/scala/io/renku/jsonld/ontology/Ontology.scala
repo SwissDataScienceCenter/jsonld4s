@@ -22,6 +22,7 @@ import cats.kernel.Semigroup
 import cats.syntax.all._
 import io.renku.jsonld.JsonLDEncoder._
 import io.renku.jsonld._
+import io.renku.jsonld.ontology.Class.SubClass
 import io.renku.jsonld.ontology.DataProperty.TopDataProperty
 import io.renku.jsonld.ontology.ObjectProperty.TopObjectProperty
 import io.renku.jsonld.syntax._
@@ -67,6 +68,8 @@ final case class Type(clazz: Class, objectProperties: List[ObjectProperty], data
 
 object Type {
 
+  def Def(clazz: Class): Type = Def(clazz, ObjectProperties.empty, DataProperties.empty)
+
   def Def(clazz: Class, dataProperty1: DataProperty.Def, otherDataProperties: DataProperty.Def*): Type =
     Def(clazz, ObjectProperties.empty, dataProperty1 :: otherDataProperties.toList)
 
@@ -86,17 +89,36 @@ object Type {
   }
 }
 
-final case class Class(id: EntityId)
+final case class Class(id: EntityId, subclass: List[SubClass])
 object Class {
 
-  def apply(clazz: EntityId): Class = new Class(EntityId.of(clazz))
+  final case class SubClass(id: EntityId)
+  object SubClass {
 
-  implicit lazy val encoder: JsonLDEncoder[Class] = JsonLDEncoder.instance { case Class(id) =>
-    JsonLD.entity(
-      id,
-      EntityTypes of owl / "Class",
-      Map.empty[Property, JsonLD]
-    )
+    def apply(typ: Type): SubClass = SubClass(typ.clazz.id)
+
+    implicit lazy val encoder: JsonLDEncoder[SubClass] = JsonLDEncoder.instance { case SubClass(id) =>
+      id.asJsonLD
+    }
+  }
+
+  def apply(clazz: EntityId): Class = new Class(EntityId.of(clazz), subclass = Nil)
+  def apply(clazz: EntityId, subClass: SubClass, otherSubClasses: SubClass*): Class =
+    new Class(EntityId.of(clazz), subclass = subClass :: otherSubClasses.toList)
+
+  implicit lazy val encoder: JsonLDEncoder[Class] = JsonLDEncoder.instance {
+    case Class(id, Nil) =>
+      JsonLD.entity(
+        id,
+        EntityTypes of owl / "Class",
+        Map.empty[Property, JsonLD]
+      )
+    case Class(id, subClasses) =>
+      JsonLD.entity(
+        id,
+        EntityTypes of owl / "Class",
+        rdfs / "subClassOf" -> subClasses.asJsonLD
+      )
   }
 }
 
@@ -126,13 +148,20 @@ object ObjectProperty {
     Def(id, List(ObjectPropertyRange(range)), subProperty = Some(TopObjectProperty))
 
   implicit lazy val encoder: JsonLDEncoder[ObjectProperty] = JsonLDEncoder.instance {
-    case ObjectProperty(id, range, domain, maybeSubProperty) =>
+    case ObjectProperty(id, range, domain, Some(topObjectProperty)) =>
       JsonLD.entity(
         id,
         EntityTypes of owl / "ObjectProperty",
         rdfs / "domain"        -> domain.asJsonLD,
         rdfs / "range"         -> range.asJsonLD,
-        rdfs / "subPropertyOf" -> maybeSubProperty.asJsonLD
+        rdfs / "subPropertyOf" -> topObjectProperty.asJsonLD
+      )
+    case ObjectProperty(id, range, domain, None) =>
+      JsonLD.entity(
+        id,
+        EntityTypes of owl / "ObjectProperty",
+        rdfs / "domain" -> domain.asJsonLD,
+        rdfs / "range"  -> range.asJsonLD
       )
   }
 }
@@ -176,14 +205,22 @@ object DataProperty {
     DataProperty.Def(id, (range1 :: otherRanges.toList).map(DataPropertyRange(_)), Some(TopDataProperty))
 
   implicit lazy val encoder: JsonLDEncoder[DataProperty] = JsonLDEncoder.instance {
-    case DataProperty(id, range, domain, maybeSubProperty) =>
+    case DataProperty(id, range, domain, Some(topDataProperty)) =>
       JsonLD
         .entity(
           id,
           EntityTypes of owl / "DatatypeProperty",
           rdfs / "domain"        -> domain.asJsonLD,
           rdfs / "range"         -> range.asJsonLD,
-          rdfs / "subPropertyOf" -> maybeSubProperty.asJsonLD
+          rdfs / "subPropertyOf" -> topDataProperty.asJsonLD
+        )
+    case DataProperty(id, range, domain, None) =>
+      JsonLD
+        .entity(
+          id,
+          EntityTypes of owl / "DatatypeProperty",
+          rdfs / "domain" -> domain.asJsonLD,
+          rdfs / "range"  -> range.asJsonLD
         )
   }
 }
