@@ -19,6 +19,7 @@
 package io.renku.jsonld
 
 import cats.syntax.all._
+import io.renku.jsonld.JsonLD.JsonLDEntityId
 import io.renku.jsonld.generators.Generators.Implicits._
 import io.renku.jsonld.generators.JsonLDGenerators._
 import org.scalatest.matchers.should
@@ -52,6 +53,15 @@ class JsonLDEncoderSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
         }
 
         encoder(Object(value)) shouldBe JsonLD.fromEntityId(EntityId.of(value))
+      }
+    }
+  }
+
+  "schema" should {
+
+    "allow to create a JsonLDEncoder producing EntityId for the given type" in {
+      forAll { (schema: Schema) =>
+        schema.asJsonLD shouldBe JsonLDEntityId(EntityId.of(schema.toString))
       }
     }
   }

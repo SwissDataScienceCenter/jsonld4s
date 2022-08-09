@@ -61,6 +61,7 @@ object JsonLDEncoder {
   final implicit val encodeLong:      JsonLDEncoder[Long]      = (a: Long) => JsonLD.fromLong(a)
   final implicit val encodeInstant:   JsonLDEncoder[Instant]   = (a: Instant) => JsonLD.fromInstant(a)
   final implicit val encodeLocalDate: JsonLDEncoder[LocalDate] = (a: LocalDate) => JsonLD.fromLocalDate(a)
+  final implicit val encodeSchema:    JsonLDEncoder[Schema]    = (a: Schema) => JsonLD.fromEntityId(a.toString)
   final implicit val encodeEntityId:  JsonLDEncoder[EntityId]  = JsonLD.fromEntityId
   final implicit val encodeJsonLD:    JsonLDEncoder[JsonLD]    = identity
   final implicit val encodeBoolean:   JsonLDEncoder[Boolean]   = (a: Boolean) => JsonLD.fromBoolean(a)
