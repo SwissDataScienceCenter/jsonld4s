@@ -188,7 +188,7 @@ object ObjectPropertyRange {
   }
 }
 
-final case class DataProperty(id:               EntityId,
+final case class DataProperty(id:               Property,
                               range:            List[DataPropertyRange],
                               domain:           List[Domain],
                               maybeSubProperty: Option[TopDataProperty],
@@ -206,7 +206,7 @@ object DataProperty {
 
   type TopDataProperty = TopDataProperty.type
 
-  final case class Def(id:               EntityId,
+  final case class Def(id:               Property,
                        range:            List[DataPropertyRange],
                        maybeSubProperty: Option[TopDataProperty],
                        maybeComment:     Option[Comment]
@@ -218,14 +218,14 @@ object DataProperty {
       DataProperty(id, range, domain = List(Domain(clazz)), maybeSubProperty, maybeComment)
   }
 
-  def apply(id: EntityId, range1: Property, otherRanges: Property*): DataProperty.Def =
+  def apply(id: Property, range1: Property, otherRanges: Property*): DataProperty.Def =
     DataProperty.Def(id,
                      (range1 :: otherRanges.toList).map(DataPropertyRange(_)),
                      maybeSubProperty = None,
                      maybeComment = None
     )
 
-  def top(id: EntityId, range1: Property, otherRanges: Property*): DataProperty.Def =
+  def top(id: Property, range1: Property, otherRanges: Property*): DataProperty.Def =
     DataProperty.Def(id,
                      (range1 :: otherRanges.toList).map(DataPropertyRange(_)),
                      Some(TopDataProperty),
@@ -236,7 +236,7 @@ object DataProperty {
     case DataProperty(id, range, domain, maybeTopProperty, maybeComment) =>
       JsonLD
         .entity(
-          id,
+          EntityId.of(id),
           EntityTypes of owl / "DatatypeProperty",
           Seq(
             Some(rdfs / "domain" -> domain.asJsonLD),
