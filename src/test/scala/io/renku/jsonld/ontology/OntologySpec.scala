@@ -433,6 +433,31 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
         } yield (id, first, restId)
       }
     }
+
+    "allow generating ontology with circular dependency on one type" in {
+
+      lazy val root: Type = Type.Def(
+        Class(schema / "Root"),
+        ObjectProperty(schema / "root", Class(schema / "Root"))
+      )
+
+      generateOntology(root, ontologyId) shouldBe JsonLD.arr(
+        JsonLD
+          .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
+
+          JsonLD
+            .entity(root.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
+
+          JsonLD
+            .entity(
+              schema / "root",
+              EntityTypes of owl / "ObjectProperty",
+              rdfs / "domain" -> List(root.clazz.id).asJsonLD,
+              rdfs / "range"  -> List(ObjectPropertyRange(root)).asJsonLD
+            ) ::
+          Nil: _*
+      )
+    }
   }
 
   private lazy val ontologyId = entityIds.generateOne

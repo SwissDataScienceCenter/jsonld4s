@@ -32,9 +32,14 @@ import io.renku.jsonld.syntax._
 final case class Type(clazz: Class, objectProperties: List[ObjectProperty], dataProperties: List[DataProperty]) {
 
   lazy val flatten: (List[Class], List[ObjectProperty], List[DataProperty]) =
-    objectProperties.flatMap(_.range).map(_.typ.flatten).foldLeft((List(clazz), objectProperties, dataProperties)) {
-      case ((allClasses, allObjProps, allDataProps), (classes, objProps, dataProps)) =>
-        (allClasses |+| classes |+| objProps.flatMap(_.range).map(_.typ.clazz),
+    objectProperties.flatMap(_.range).foldLeft((List(clazz), objectProperties, dataProperties)) {
+      case (allCollected @ (allClasses, _, _), ObjectPropertyRange.OfType(typ)) if allClasses contains typ.clazz =>
+        allCollected
+      case ((allClasses, allObjProps, allDataProps), ObjectPropertyRange.OfClass(clazz)) =>
+        (allClasses |+| List(clazz), allObjProps, allDataProps)
+      case ((allClasses, allObjProps, allDataProps), objPropRange: ObjectPropertyRange.OfType) =>
+        val (classes, objProps, dataProps) = objPropRange.typ.flatten
+        (allClasses |+| classes |+| objProps.flatMap(_.range).map(_.clazz),
          allObjProps |+| objProps,
          allDataProps |+| dataProps
         )
@@ -159,6 +164,12 @@ object ObjectProperty {
   def apply(id: EntityId, range: Type, maybeComment: Option[Comment] = None): Def =
     Def(id, List(ObjectPropertyRange(range)), maybeSubProperty = None, maybeComment)
 
+  def apply(id: EntityId, range: ObjectPropertyRange, otherRanges: ObjectPropertyRange*): Def =
+    Def(id, range :: otherRanges.toList, maybeSubProperty = None, maybeComment = None)
+
+  def apply(id: EntityId, range: Class, otherRanges: Class*): Def =
+    Def(id, (range :: otherRanges.toList).map(ObjectPropertyRange(_)), maybeSubProperty = None, maybeComment = None)
+
   def apply(id: EntityId, range: Type, otherRanges: Type*): Def =
     Def(id, (range :: otherRanges.toList).map(ObjectPropertyRange(_)), maybeSubProperty = None, maybeComment = None)
 
@@ -192,11 +203,22 @@ object ObjectProperties {
   def apply(properties: ObjectProperty.Def*): List[ObjectProperty.Def] = properties.toList
 }
 
-final case class ObjectPropertyRange(typ: Type)
+sealed trait ObjectPropertyRange {
+  def clazz: Class
+}
 object ObjectPropertyRange {
 
-  implicit lazy val encoder: JsonLDEncoder[ObjectPropertyRange] = JsonLDEncoder.instance { range =>
-    JsonLD.fromEntityId(range.typ.clazz.id)
+  final case class OfType(typ: Type) extends ObjectPropertyRange {
+    override lazy val clazz: Class = typ.clazz
+  }
+  final case class OfClass(clazz: Class) extends ObjectPropertyRange
+
+  def apply(typ: Type):    ObjectPropertyRange = OfType(typ)
+  def apply(clazz: Class): ObjectPropertyRange = OfClass(clazz)
+
+  implicit lazy val encoder: JsonLDEncoder[ObjectPropertyRange] = JsonLDEncoder.instance {
+    case OfType(typ)    => JsonLD.fromEntityId(typ.clazz.id)
+    case OfClass(clazz) => JsonLD.fromEntityId(clazz.id)
   }
 }
 
