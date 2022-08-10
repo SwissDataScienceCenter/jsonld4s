@@ -25,7 +25,6 @@ import io.renku.jsonld.JsonLDEncoder._
 import io.renku.jsonld._
 import io.renku.jsonld.generators.Generators.Implicits._
 import io.renku.jsonld.generators.JsonLDGenerators._
-import io.renku.jsonld.ontology.Class.SubClass
 import io.renku.jsonld.syntax._
 import org.scalatest.matchers.should
 import org.scalatest.wordspec.AnyWordSpec
@@ -313,11 +312,11 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
     "list subClasses if defined on the Type" in {
 
       val otherLeafType = Type.Def(
-        Class(schema / "OtherLeaf", SubClass(schema / "Top"))
+        Class(schema / "OtherLeaf", ParentClass(schema / "Top"))
       )
 
       val rootType = Type.Def(
-        Class(schema / "Root", SubClass(leaf)),
+        Class(schema / "Root", ParentClass(leaf)),
         ObjectProperty(schema / "leaf", otherLeafType)
       )
 

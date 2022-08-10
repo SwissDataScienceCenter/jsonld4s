@@ -24,7 +24,6 @@ import cats.kernel.Semigroup
 import cats.syntax.all._
 import io.renku.jsonld.JsonLDEncoder._
 import io.renku.jsonld._
-import io.renku.jsonld.ontology.Class.SubClass
 import io.renku.jsonld.ontology.DataProperty.TopDataProperty
 import io.renku.jsonld.ontology.ObjectProperty.TopObjectProperty
 import io.renku.jsonld.syntax._
@@ -111,38 +110,39 @@ object Type {
   }
 }
 
-final case class Class(id: EntityId, subclass: List[SubClass], maybeComment: Option[Comment]) {
+final case class Class(id: EntityId, parentClasses: List[ParentClass], maybeComment: Option[Comment]) {
   def withComment(comment: String): Class = copy(maybeComment = Some(Comment(comment)))
 }
 object Class {
 
-  final case class SubClass(id: EntityId)
-  object SubClass {
-
-    def apply(typ: Type): SubClass = SubClass(typ.clazz.id)
-
-    implicit lazy val encoder: JsonLDEncoder[SubClass] = JsonLDEncoder.instance { case SubClass(id) =>
-      id.asJsonLD
-    }
-  }
-
   def apply(clazz: EntityId, maybeComment: Option[Comment] = None): Class =
-    new Class(EntityId.of(clazz), subclass = Nil, maybeComment)
-  def apply(clazz: EntityId, subClass: SubClass, otherSubClasses: SubClass*): Class =
-    new Class(EntityId.of(clazz), subclass = subClass :: otherSubClasses.toList, maybeComment = None)
+    new Class(EntityId.of(clazz), parentClasses = Nil, maybeComment)
+  def apply(clazz: EntityId, parentClass: ParentClass, otherParentClasses: ParentClass*): Class =
+    new Class(EntityId.of(clazz), parentClasses = parentClass :: otherParentClasses.toList, maybeComment = None)
 
-  implicit lazy val encoder: JsonLDEncoder[Class] = JsonLDEncoder.instance { case Class(id, subClasses, maybeComment) =>
-    JsonLD.entity(
-      id,
-      EntityTypes of owl / "Class",
-      Seq(
-        subClasses match {
-          case Nil => Option.empty[(Property, JsonLD)]
-          case _   => Some(rdfs / "subClassOf" -> subClasses.asJsonLD)
-        },
-        maybeComment.map(c => rdfs / "comment" -> c.asJsonLD)
-      ).flatten.toMap
-    )
+  implicit lazy val encoder: JsonLDEncoder[Class] = JsonLDEncoder.instance {
+    case Class(id, parentClasses, maybeComment) =>
+      JsonLD.entity(
+        id,
+        EntityTypes of owl / "Class",
+        Seq(
+          parentClasses match {
+            case Nil => Option.empty[(Property, JsonLD)]
+            case _   => Some(rdfs / "subClassOf" -> parentClasses.asJsonLD)
+          },
+          maybeComment.map(c => rdfs / "comment" -> c.asJsonLD)
+        ).flatten.toMap
+      )
+  }
+}
+
+final case class ParentClass(id: EntityId)
+object ParentClass {
+
+  def apply(typ: Type): ParentClass = ParentClass(typ.clazz.id)
+
+  implicit lazy val encoder: JsonLDEncoder[ParentClass] = JsonLDEncoder.instance { case ParentClass(id) =>
+    id.asJsonLD
   }
 }
 
