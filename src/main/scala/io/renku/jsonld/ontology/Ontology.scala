@@ -18,6 +18,7 @@
 
 package io.renku.jsonld.ontology
 
+import cats.Show
 import cats.data.NonEmptyList
 import cats.kernel.Semigroup
 import cats.syntax.all._
@@ -158,8 +159,18 @@ object ObjectProperty {
   def apply(id: EntityId, range: Type, maybeComment: Option[Comment] = None): Def =
     Def(id, List(ObjectPropertyRange(range)), maybeSubProperty = None, maybeComment)
 
+  def apply(id: EntityId, range: Type, otherRanges: Type*): Def =
+    Def(id, (range :: otherRanges.toList).map(ObjectPropertyRange(_)), maybeSubProperty = None, maybeComment = None)
+
   def top(id: EntityId, range: Type, maybeComment: Option[Comment] = None): Def =
     Def(id, List(ObjectPropertyRange(range)), maybeSubProperty = Some(TopObjectProperty), maybeComment)
+
+  def top(id: EntityId, range: Type, otherRanges: Type*): Def =
+    Def(id,
+        (range :: otherRanges.toList).map(ObjectPropertyRange(_)),
+        maybeSubProperty = Some(TopObjectProperty),
+        maybeComment = None
+    )
 
   implicit lazy val encoder: JsonLDEncoder[ObjectProperty] = JsonLDEncoder.instance {
     case ObjectProperty(id, range, domain, maybeTopProperty, maybeComment) =>
@@ -275,6 +286,7 @@ object DataPropertyRange {
 
   def apply(id: Property):                 DataPropertyRange = Simple(id)
   def apply(item: String, other: String*): DataPropertyRange = Enumeration(NonEmptyList.of(item, other: _*))
+  def apply[T](items: NonEmptyList[T])(implicit show: Show[T]): DataPropertyRange = Enumeration(items.map(_.show))
 
   implicit lazy val encoder: JsonLDEncoder[DataPropertyRange] = JsonLDEncoder.instance[DataPropertyRange] {
     case Simple(id) => JsonLD.fromEntityId(id)
