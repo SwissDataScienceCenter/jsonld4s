@@ -24,6 +24,7 @@ package object ontology {
 
   val owl:  Schema = Schema.from("http://www.w3.org/2002/07/owl", separator = "#")
   val oa:   Schema = Schema.from("http://www.w3.org/ns/oa", separator = "#")
+  val rdf:  Schema = Schema.from("http://www.w3.org/1999/02/22-rdf-syntax-ns", separator = "#")
   val rdfs: Schema = Schema.from("http://www.w3.org/2000/01/rdf-schema", separator = "#")
   val xsd:  Schema = Schema.from("http://www.w3.org/2001/XMLSchema", separator = "#")
 

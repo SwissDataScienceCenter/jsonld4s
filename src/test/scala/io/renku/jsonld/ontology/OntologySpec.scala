@@ -19,6 +19,8 @@
 package io.renku.jsonld.ontology
 
 import DataPropertyRange._
+import cats.syntax.all._
+import io.renku.jsonld.JsonLDDecoder._
 import io.renku.jsonld.JsonLDEncoder._
 import io.renku.jsonld._
 import io.renku.jsonld.generators.Generators.Implicits._
@@ -386,6 +388,50 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
 
           Nil: _*
       )
+    }
+
+    "allow generating ontology when there's a Data Property with an enum range" in {
+
+      val typeDef = Type.Def(
+        Class(schema / "Type"),
+        DataProperty(schema / "enum", DataPropertyRange("a", "b"))
+      )
+
+      generateOntology(typeDef, ontologyId).flatten
+        .fold(throw _, identity)
+        .cursor
+        .as(decodeList(enumFieldDecoder))
+        .map(_.flatten) shouldBe List("a", "b").asRight
+
+      lazy val enumFieldDecoder = JsonLDDecoder.entity(EntityTypes of owl / "DatatypeProperty") { cursor =>
+        for {
+          id <- cursor.downEntityId.as[EntityId]
+          _ <- Either.cond(id == EntityId.of(schema / "enum"),
+                           (),
+                           fail(s"DatatypeProperty id: $id but expected ${EntityId.of(schema / "enum")}")
+               )
+          rangeId <- cursor.downField(rdfs / "range").as[EntityId]
+          oneOfId <- cursor.focusTop
+                       .as(decodeList(datatypeDecoder))
+                       .map(_.find(_._1 == rangeId).map(_._2).getOrElse(fail("No Datatype entity")))
+          list       <- cursor.focusTop.as(decodeList(listDecoder))
+          firstItem  <- list.find(_._1 == oneOfId).getOrElse(fail("No first enum item")).asRight
+          secondItem <- list.find(_._1 == firstItem._3).getOrElse(fail("No second enum item")).asRight
+          _          <- Either.cond(secondItem._3 == EntityId.of(rdf / "nil"), (), fail("More than two items found"))
+        } yield List(firstItem._2, secondItem._2)
+      }
+
+      lazy val datatypeDecoder = JsonLDDecoder.entity(EntityTypes of rdfs / "Datatype") { cur =>
+        (cur.downEntityId.as[EntityId] -> cur.downField(owl / "oneOf").as[EntityId]).mapN(_ -> _)
+      }
+
+      lazy val listDecoder = JsonLDDecoder.entity(EntityTypes of rdf / "List") { cursor =>
+        for {
+          id     <- cursor.downEntityId.as[EntityId]
+          first  <- cursor.downField(rdf / "first").as[String]
+          restId <- cursor.downField(rdf / "rest").downEntityId.as[EntityId]
+        } yield (id, first, restId)
+      }
     }
   }
 

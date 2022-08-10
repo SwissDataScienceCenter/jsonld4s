@@ -18,6 +18,7 @@
 
 package io.renku.jsonld.ontology
 
+import cats.data.NonEmptyList
 import cats.kernel.Semigroup
 import cats.syntax.all._
 import io.renku.jsonld.JsonLDEncoder._
@@ -220,17 +221,23 @@ object DataProperty {
 
   def apply(id: Property, range1: Property, otherRanges: Property*): DataProperty.Def =
     DataProperty.Def(id,
-                     (range1 :: otherRanges.toList).map(DataPropertyRange(_)),
+                     (range1 :: otherRanges.toList).map(DataPropertyRange.Simple),
                      maybeSubProperty = None,
                      maybeComment = None
     )
 
+  def apply(id: Property, range1: DataPropertyRange, otherRanges: DataPropertyRange*): DataProperty.Def =
+    DataProperty.Def(id, range1 :: otherRanges.toList, maybeSubProperty = None, maybeComment = None)
+
   def top(id: Property, range1: Property, otherRanges: Property*): DataProperty.Def =
     DataProperty.Def(id,
-                     (range1 :: otherRanges.toList).map(DataPropertyRange(_)),
+                     (range1 :: otherRanges.toList).map(DataPropertyRange.Simple),
                      Some(TopDataProperty),
                      maybeComment = None
     )
+
+  def top(id: Property, range1: DataPropertyRange, otherRanges: DataPropertyRange*): DataProperty.Def =
+    DataProperty.Def(id, range1 :: otherRanges.toList, Some(TopDataProperty), maybeComment = None)
 
   implicit lazy val encoder: JsonLDEncoder[DataProperty] = JsonLDEncoder.instance {
     case DataProperty(id, range, domain, maybeTopProperty, maybeComment) =>
@@ -260,10 +267,38 @@ object Domain {
   }
 }
 
-final case class DataPropertyRange(id: Property)
+sealed trait DataPropertyRange
 object DataPropertyRange {
-  implicit lazy val encoder: JsonLDEncoder[DataPropertyRange] = JsonLDEncoder.instance { case DataPropertyRange(id) =>
-    JsonLD.fromEntityId(id)
+
+  final case class Simple(id: Property)                     extends DataPropertyRange
+  final case class Enumeration(items: NonEmptyList[String]) extends DataPropertyRange
+
+  def apply(id: Property):                 DataPropertyRange = Simple(id)
+  def apply(item: String, other: String*): DataPropertyRange = Enumeration(NonEmptyList.of(item, other: _*))
+
+  implicit lazy val encoder: JsonLDEncoder[DataPropertyRange] = JsonLDEncoder.instance[DataPropertyRange] {
+    case Simple(id) => JsonLD.fromEntityId(id)
+    case Enumeration(items) =>
+      def toJson(headItem: String, tailItems: List[String]): JsonLD = tailItems match {
+        case Nil =>
+          JsonLD.entity(EntityId.blank,
+                        EntityTypes of rdf / "List",
+                        rdf / "first" -> headItem.asJsonLD,
+                        rdf / "rest"  -> EntityId.of(rdf / "nil").asJsonLD
+          )
+        case newHead :: newTail =>
+          JsonLD.entity(EntityId.blank,
+                        EntityTypes of rdf / "List",
+                        rdf / "first" -> headItem.asJsonLD,
+                        rdf / "rest"  -> toJson(newHead, newTail)
+          )
+      }
+
+      JsonLD.entity(
+        EntityId.blank,
+        EntityTypes of rdfs / "Datatype",
+        owl / "oneOf" -> toJson(items.head, items.tail)
+      )
   }
 }
 
