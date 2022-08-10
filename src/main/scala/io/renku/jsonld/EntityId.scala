@@ -56,8 +56,8 @@ object EntityId {
 
   implicit val entityIdJsonDecoder: Decoder[EntityId] = Decoder.instance {
     _.as[String].map {
-      case s if s.startsWith("_:") => EntityId.blank
-      case s                       => EntityId.of(s)
+      case s"_:${uuid}" => EntityId.BlankNodeEntityId(UUID.fromString(uuid))
+      case s            => EntityId.of(s)
     }
   }
 
