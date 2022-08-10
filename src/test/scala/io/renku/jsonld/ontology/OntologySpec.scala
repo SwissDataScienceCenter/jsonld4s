@@ -434,9 +434,9 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
       }
     }
 
-    "allow generating ontology with circular dependency on one type" in {
+    "allow generating ontology with circular dependencies" in {
 
-      lazy val root: Type = Type.Def(
+      lazy val root = Type.Def(
         Class(schema / "Root"),
         ObjectProperty(schema / "root", Class(schema / "Root"))
       )
@@ -454,6 +454,52 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
               EntityTypes of owl / "ObjectProperty",
               rdfs / "domain" -> List(root.clazz.id).asJsonLD,
               rdfs / "range"  -> List(ObjectPropertyRange(root)).asJsonLD
+            ) ::
+          Nil: _*
+      )
+    }
+
+    "allow defining reverse dependencies" in {
+
+      val reverseClass = Class(schema / "Reverse")
+      lazy val reverse = ReverseProperty(refTypeClass =>
+        Type.Def(
+          reverseClass,
+          ObjectProperties(ObjectProperty(schema / "root", refTypeClass)),
+          DataProperties(DataProperty(schema / "name", xsd / "string"))
+        )
+      )
+
+      lazy val root = Type.Def(
+        Class(schema / "Root"),
+        ObjectProperties.empty,
+        DataProperties(DataProperty(schema / "name", xsd / "string")),
+        ReverseProperties(reverse)
+      )
+
+      generateOntology(root, ontologyId) shouldBe JsonLD.arr(
+        JsonLD
+          .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
+
+          JsonLD
+            .entity(root.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
+          JsonLD
+            .entity(reverseClass.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
+
+          JsonLD
+            .entity(
+              schema / "root",
+              EntityTypes of owl / "ObjectProperty",
+              rdfs / "domain" -> List(reverseClass.id).asJsonLD,
+              rdfs / "range"  -> List(ObjectPropertyRange(root)).asJsonLD
+            ) ::
+
+          JsonLD
+            .entity(
+              schema / "name",
+              EntityTypes of owl / "DatatypeProperty",
+              rdfs / "domain" -> List(root.clazz.id, reverseClass.id).asJsonLD,
+              rdfs / "range"  -> List(DataPropertyRange(xsd / "string")).asJsonLD
             ) ::
           Nil: _*
       )

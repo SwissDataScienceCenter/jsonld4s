@@ -29,9 +29,21 @@ import io.renku.jsonld.ontology.DataProperty.TopDataProperty
 import io.renku.jsonld.ontology.ObjectProperty.TopObjectProperty
 import io.renku.jsonld.syntax._
 
-final case class Type(clazz: Class, objectProperties: List[ObjectProperty], dataProperties: List[DataProperty]) {
+final case class Type(clazz:             Class,
+                      objectProperties:  List[ObjectProperty],
+                      dataProperties:    List[DataProperty],
+                      reverseProperties: List[ReverseProperty]
+) {
 
-  lazy val flatten: (List[Class], List[ObjectProperty], List[DataProperty]) =
+  type FlatteningResults = (List[Class], List[ObjectProperty], List[DataProperty])
+
+  lazy val flatten: FlatteningResults =
+    reverseProperties.map(_.factory(clazz)).map(_.flatten).foldLeft(directPropsResults) {
+      case ((allClasses, allObjProps, allDataProps), (reverseClasses, reverseObjProps, reverseDataProps)) =>
+        (allClasses |+| reverseClasses, allObjProps |+| reverseObjProps, allDataProps |+| reverseDataProps)
+    }
+
+  private lazy val directPropsResults: FlatteningResults =
     objectProperties.flatMap(_.range).foldLeft((List(clazz), objectProperties, dataProperties)) {
       case (allCollected @ (allClasses, _, _), ObjectPropertyRange.OfType(typ)) if allClasses contains typ.clazz =>
         allCollected
@@ -75,16 +87,19 @@ final case class Type(clazz: Class, objectProperties: List[ObjectProperty], data
 
 object Type {
 
-  def Def(clazz: Class): Type = Def(clazz, ObjectProperties.empty, DataProperties.empty)
+  def Def(clazz: Class): Type = Def(clazz, ObjectProperties.empty, DataProperties.empty, ReverseProperties.empty)
 
   def Def(clazz: Class, dataProperty1: DataProperty.Def, otherDataProperties: DataProperty.Def*): Type =
-    Def(clazz, ObjectProperties.empty, dataProperty1 :: otherDataProperties.toList)
+    Def(clazz, ObjectProperties.empty, dataProperty1 :: otherDataProperties.toList, ReverseProperties.empty)
 
   def Def(clazz: Class, objProperty1: ObjectProperty.Def, otherObjProperties: ObjectProperty.Def*): Type =
-    Def(clazz, objProperty1 :: otherObjProperties.toList, DataProperties.empty)
+    Def(clazz, objProperty1 :: otherObjProperties.toList, DataProperties.empty, ReverseProperties.empty)
 
-  def Def(clazz: Class, objectProperties: List[ObjectProperty.Def], dataProperties: List[DataProperty.Def]): Type =
-    Type(clazz, objectProperties.map(_.of(clazz)), dataProperties.map(_.of(clazz)))
+  def Def(clazz:             Class,
+          objectProperties:  List[ObjectProperty.Def],
+          dataProperties:    List[DataProperty.Def],
+          reverseProperties: List[ReverseProperty] = ReverseProperties.empty
+  ): Type = Type(clazz, objectProperties.map(_.of(clazz)), dataProperties.map(_.of(clazz)), reverseProperties)
 
   implicit def encoder: JsonLDEncoder[Type] = JsonLDEncoder.instance {
     _.flatten match {
@@ -339,4 +354,11 @@ object DataPropertyRange {
 final case class Comment(value: String)
 object Comment {
   implicit lazy val encoder: JsonLDEncoder[Comment] = JsonLDEncoder.encodeString.contramap(_.value)
+}
+
+final case class ReverseProperty(factory: Class => Type)
+object ReverseProperties {
+  lazy val empty: List[ReverseProperty] = Nil
+  def apply(reverse: ReverseProperty, otherReverses: ReverseProperty*): List[ReverseProperty] =
+    reverse :: otherReverses.toList
 }
