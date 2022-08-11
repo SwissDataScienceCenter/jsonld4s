@@ -21,6 +21,7 @@ package io.renku.jsonld
 import io.renku.jsonld.EntityId.BlankNodeEntityId
 import io.renku.jsonld.generators.Generators.Implicits._
 import io.renku.jsonld.generators.Generators._
+import io.renku.jsonld.generators.JsonLDGenerators._
 import org.apache.jena.util.URIref
 import org.scalatest.matchers.should
 import org.scalatest.wordspec.AnyWordSpec
@@ -37,6 +38,18 @@ class EntityIdSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should
 
       forAll(emails.map(e => s"mailto: $e")) { uri =>
         EntityId.of(uri).value shouldBe URIref.encode(uri)
+      }
+    }
+
+    "allow passing a Property" in {
+      forAll { (property: Property) =>
+        EntityId.of(property).value shouldBe property.url
+      }
+    }
+
+    "allow passing a Schema" in {
+      forAll { (schema: Schema) =>
+        EntityId.of(schema).value shouldBe schema.url
       }
     }
 

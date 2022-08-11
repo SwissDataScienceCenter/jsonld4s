@@ -63,6 +63,7 @@ object EntityId {
 
   implicit val stringToEntityId:   String => EntityId   = v => StandardEntityId(URIref.encode(v))
   implicit val propertyToEntityId: Property => EntityId = p => StandardEntityId(URIref.encode(p.url))
+  implicit val schemaToEntityId:   Schema => EntityId   = s => StandardEntityId(URIref.encode(s.url))
 
   implicit val show: Show[EntityId] = Show[EntityId](entityId => entityId.valueShow.show(entityId.value))
 }

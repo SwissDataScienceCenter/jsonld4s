@@ -22,15 +22,16 @@ import io.renku.jsonld.syntax._
 
 package object ontology {
 
-  val owl:  Schema = Schema.from("http://www.w3.org/2002/07/owl", separator = "#")
   val oa:   Schema = Schema.from("http://www.w3.org/ns/oa", separator = "#")
+  val owl:  Schema = Schema.from("http://www.w3.org/2002/07/owl", separator = "#")
   val rdf:  Schema = Schema.from("http://www.w3.org/1999/02/22-rdf-syntax-ns", separator = "#")
   val rdfs: Schema = Schema.from("http://www.w3.org/2000/01/rdf-schema", separator = "#")
   val xsd:  Schema = Schema.from("http://www.w3.org/2001/XMLSchema", separator = "#")
 
-  def generateOntology[A](typeDef: Type, ontologyId: EntityId)(implicit encoder: JsonLDEncoder[Type]): JsonLD =
-    JsonLD.arr(
-      JsonLD.entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
-        typeDef.asJsonLD.asArray.getOrElse(Vector.empty).toList: _*
-    )
+  def generateOntology(typeDef: Type, schema: Schema): JsonLD = generateOntology(typeDef, EntityId.of(schema))
+
+  def generateOntology(typeDef: Type, ontologyId: EntityId): JsonLD = JsonLD.arr(
+    JsonLD.entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
+      typeDef.asJsonLD.asArray.getOrElse(Vector.empty).toList: _*
+  )
 }
