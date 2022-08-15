@@ -181,3 +181,56 @@ Every JsonLD object can be turn to Json using it's `toJson` method.
 ## Detailed examples
 
 **For More examples, please see src/examples/scala/examples**
+
+## Ontology
+
+JsonLD4s library allows defining and generating ontologies.
+
+### Defining ontology
+
+Defining ontology of a specific type should be done using the `io.renku.jsonld.ontology.Type` class. An example definition can look like follows:
+
+```scala
+import io.renku.jsonld.ontology._
+import io.renku.jsonld.Schema
+
+val prov:   Schema = Schema.from("http://www.w3.org/ns/prov", separator = "#")
+val renku:  Schema = Schema.from("https://swissdatasciencecenter.github.io/renku-ontology", separator = "#")
+val schema: Schema = Schema.from("http://schema.org")
+
+val subtypeOntology: Type = Type.Def(
+  Class(schema / "Thing"),
+  DataProperty(schema / "name", xsd / "string")
+)
+
+val rootOntology: Type = Type.Def(
+  Class(prov / "Activity"),
+  ObjectProperties(
+    ObjectProperty(renku / "parameter", subtypeOntology)
+  ),
+  DataProperties(DataProperty(prov / "startedAtTime", xsd / "dateTime"),
+                 DataProperty(prov / "endedAtTime", xsd / "dateTime")
+  )
+)
+```
+
+Type's class needs to be defined with the `Class` type, properties linking other types with a collection of `ObjectProperty` objects and simple value properties with a collection of `DataProperty` objects. The library calculates properties' ranges and domains automatically during ontology generation.
+
+### Generating ontology
+
+Generating ontology is a trivial task which can be done using the `io.renku.jsonld.ontology.generateOntology` method. The method takes a `Type` definition and a `Schema`.
+
+```scala
+import io.renku.jsonld.ontology._
+import io.renku.jsonld.Schema
+
+val renku:  Schema = Schema.from("https://swissdatasciencecenter.github.io/renku-ontology", separator = "#")
+val schema: Schema = Schema.from("http://schema.org")
+
+val ontology: Type = Type.Def(
+  Class(schema / "Thing"),
+  DataProperty(schema / "name", xsd / "string")
+)
+
+generateOntology(ontology, renku)
+```
