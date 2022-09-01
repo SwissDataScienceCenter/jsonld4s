@@ -18,6 +18,7 @@
 
 package io.renku.jsonld.generators
 
+import Generators.Implicits._
 import Generators._
 import io.renku.jsonld.JsonLD.{JsonLDEdge, JsonLDEntity}
 import io.renku.jsonld._
@@ -73,4 +74,9 @@ object JsonLDGenerators {
     property <- properties
     target   <- entityIds
   } yield JsonLD.edge(source, property, target)
+
+  implicit val namedGraphs: Gen[NamedGraph] = for {
+    id       <- entityIds
+    entities <- jsonLDEntities.toGeneratorOfNonEmptyList()
+  } yield NamedGraph(id, entities.head, entities.tail: _*)
 }

@@ -168,7 +168,6 @@ class JsonLDFlattenSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
              V
 
      (child, parent0, parent2, parent1)  // order not guaranteed
-
        */
 
       def replaceEntityProperty(properties: Map[Property, JsonLD], property: Property, entity: JsonLDEntity) =
@@ -323,6 +322,7 @@ class JsonLDFlattenSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
   }
 
   "unsafeFlatten" should {
+
     "throw an error in the case of MalformedJsonLD" in {
       val parent0        = jsonLDEntities.generateOne
       val parent1        = jsonLDEntities.generateOne
@@ -356,5 +356,4 @@ class JsonLDFlattenSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
 
     def add(property: (Property, JsonLD)): JsonLDEntity = entity.copy(properties = entity.properties + property)
   }
-
 }
