@@ -99,13 +99,10 @@ object JsonLD {
   def edge(source: EntityId, property: Property, target: EntityId): JsonLDEdge =
     JsonLDEdge(source, property, target)
 
-  private[jsonld] sealed trait JsonLDEntityLike extends JsonLD
+  sealed trait JsonLDEntityLike extends JsonLD
 
-  private[jsonld] final case class JsonLDEntity(id:         EntityId,
-                                                types:      EntityTypes,
-                                                properties: Map[Property, JsonLD],
-                                                reverse:    Reverse
-  ) extends JsonLD
+  final case class JsonLDEntity(id: EntityId, types: EntityTypes, properties: Map[Property, JsonLD], reverse: Reverse)
+      extends JsonLD
       with JsonLDEntityLike
       with JsonLDEntityFlatten {
 
@@ -136,7 +133,7 @@ object JsonLD {
     override lazy val merge:       Either[MalformedJsonLD, JsonLD] = this.asRight
   }
 
-  private[jsonld] final case class JsonLDEdge(source: EntityId, property: Property, target: EntityId)
+  final case class JsonLDEdge(source: EntityId, property: Property, target: EntityId)
       extends JsonLD
       with JsonLDEntityLike {
 

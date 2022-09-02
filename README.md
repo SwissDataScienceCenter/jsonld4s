@@ -2,12 +2,24 @@
 
 # json-ld
 
-This is a Scala library to work with Json-LD. It's build on top of [Circe](https://circe.github.io/circe) and follows
+This is a Scala library to work with JSON-LD. It's build on top of [Circe](https://circe.github.io/circe) and follows
 the design choices of its API.
 
-## Encoding to Json-LD
+## API
 
-The library allows to encode any Scala object to Json-LD. Encoders for common types like `String`, `Int`, `Long`
+The library comes with an API allowing creation of the following JSON-LD structures:
+* values; all the factories can be found in `io.renku.jsonld.JsonLD.fromXXX` where `XXX` stands for a common value types like `Int`, `Boolean`, `String`, etc. plus `java.time.Instant`, `java.time.LocalDate`, `scala.Option` and `io.renku.jsonld.EntityId`;
+* entities; the `io.renku.jsonld.JsonLD.entity` comes in a few variations to meet various user needs;
+* edges; `io.renku.jsonld.JsonLD.edge`;
+* arrays: `io.renku.jsonld.JsonLD.arr`;
+* entity IDs; `io.renku.jsonld.EntityId.of` and `io.renku.jsonld.EntityId.blank` for generating blank node IDs;
+* named graphs; `io.renku.jsonld.NamedGraph` and `io.renku.jsonld.NamedGraph.from` controlling effects happening on instantiation. 
+
+A `NamedGraph` can be instantiated with a list of entities and/or edges. In cases when a `NamedGraph` supposed to be instantiated with a generic list of `JsonLD` objects, the `io.renku.jsonld.NamedGraph.from` controlling effects should be used. The factory checks if all the objects are either entities or edges and returns a failure if at least one object is of different type.  
+
+## Encoding to JSON-LD
+
+The library allows to encode any Scala object to JSON-LD. Encoders for common types like `String`, `Int`, `Long`
 , `java.time.Instant` and `java.time.LocalDate` are provided by the library. There are also facilities for encoding
 objects, arrays of objects, options, lists and sets. All the mentioned tools exists in the `io.renku.jsonld.JsonLD`
 object.
