@@ -19,40 +19,40 @@
 package examples
 
 import examples.ExampleSchemas.schema
+import io.circe.literal._
 import io.renku.jsonld.parser._
 import io.renku.jsonld.{EntityTypes, JsonLD, JsonLDDecoder}
 import org.scalatest.wordspec.AnyWordSpec
 
 class BasicDecoding extends AnyWordSpec {
 
-  private val input: String =
-    """
-      |[
-      |  {
-      |    "@id" : "http://example.org/projects/46955437",
-      |    "@type" : "http://schema.org/Project",
-      |    "http://schema.org/member" : [
-      |      {
-      |        "@id" : "http://example.org/users/82025894",
-      |        "@type" : "http://schema.org/Person",
-      |        "http://schema.org/name" : {
-      |          "@value" : "User1"
-      |        }
-      |      },
-      |      {
-      |        "@id" : "http://example.org/users/82025895",
-      |        "@type" : "http://schema.org/Person",
-      |        "http://schema.org/name" : {
-      |          "@value" : "User2"
-      |        }
-      |      }
-      |    ],
-      |    "http://schema.org/name" : {
-      |      "@value" : "MyProject"
-      |    }
-      |  }
-      |]
-      |""".stripMargin
+  private val input: String = json"""
+    [
+      {
+        "@id" : "http://example.org/projects/46955437",
+        "@type" : "http://schema.org/Project",
+        "http://schema.org/member" : [
+          {
+            "@id" : "http://example.org/users/82025894",
+            "@type" : "http://schema.org/Person",
+            "http://schema.org/name" : {
+              "@value" : "User1"
+            }
+          },
+          {
+            "@id" : "http://example.org/users/82025895",
+            "@type" : "http://schema.org/Person",
+            "http://schema.org/name" : {
+              "@value" : "User2"
+            }
+          }
+        ],
+        "http://schema.org/name" : {
+          "@value" : "MyProject"
+        }
+      }
+    ]
+  """.spaces2
 
   private val userEntityTypes:    EntityTypes = EntityTypes.of(schema / "Person")
   private val projectEntityTypes: EntityTypes = EntityTypes.of(schema / "Project")
