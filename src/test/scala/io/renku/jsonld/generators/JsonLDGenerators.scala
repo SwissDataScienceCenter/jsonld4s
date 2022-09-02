@@ -20,7 +20,7 @@ package io.renku.jsonld.generators
 
 import Generators.Implicits._
 import Generators._
-import io.renku.jsonld.JsonLD.{JsonLDEdge, JsonLDEntity}
+import io.renku.jsonld.JsonLD.{JsonLDEdge, JsonLDEntity, JsonLDEntityLike}
 import io.renku.jsonld._
 import org.scalacheck.{Arbitrary, Gen}
 
@@ -74,6 +74,8 @@ object JsonLDGenerators {
     property <- properties
     target   <- entityIds
   } yield JsonLD.edge(source, property, target)
+
+  val jsonLDEntityLikes: Gen[JsonLDEntityLike] = Gen.oneOf(jsonLDEntities, jsonLDEdges)
 
   implicit val namedGraphs: Gen[NamedGraph] = for {
     id       <- entityIds

@@ -19,11 +19,13 @@
 package io.renku.jsonld
 
 import cats.syntax.all._
-import io.renku.jsonld.JsonLD.JsonLDEntityLike
+import io.renku.jsonld.JsonLD.{JsonLDArray, JsonLDEntityLike}
 import io.renku.jsonld.flatten.NamedGraphFlatten
 import io.renku.jsonld.merge.EntitiesMerger
 
-final case class NamedGraph(id: EntityId, entities: List[JsonLDEntityLike])
+import scala.annotation.tailrec
+
+final case class NamedGraph(id: EntityId, entities: Seq[JsonLDEntityLike])
     extends JsonLD
     with NamedGraphFlatten
     with EntitiesMerger {
@@ -53,4 +55,16 @@ object NamedGraph {
   def apply(id: EntityId, entity: JsonLDEntityLike, otherEntities: JsonLDEntityLike*): NamedGraph =
     NamedGraph(id, entity :: otherEntities.toList)
 
+  def from(id: EntityId, jsonLD: JsonLD, otherJsonLDs: JsonLD*): Either[IllegalArgumentException, NamedGraph] =
+    flatten(jsonLD :: otherJsonLDs.toList, List.empty).map(NamedGraph(id, _))
+
+  @tailrec
+  private def flatten(toFlatten: List[JsonLD],
+                      flattened: List[JsonLDEntityLike]
+  ): Either[IllegalArgumentException, List[JsonLDEntityLike]] = toFlatten match {
+    case Nil                              => flattened.asRight
+    case (json: JsonLDEntityLike) :: more => flatten(more, flattened ::: json :: Nil)
+    case JsonLDArray(jsons) :: more       => flatten(jsons.toList ::: more, flattened)
+    case _ :: _ => new IllegalArgumentException("NamedGraph can be instantiated with a Entities and Edges only").asLeft
+  }
 }

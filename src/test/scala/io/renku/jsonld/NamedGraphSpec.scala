@@ -55,6 +55,51 @@ class NamedGraphSpec extends AnyWordSpec with should.Matchers with ScalaCheckPro
     }
   }
 
+  "from" should {
+
+    "allow instantiating from a JsonLDArray of JsonLDEntityLike objects" in {
+      val id             = entityIds.generateOne
+      val array1Entities = jsonLDEntityLikes.generateNonEmptyList().toList
+      val array2Entities = jsonLDEntityLikes.generateNonEmptyList().toList
+
+      val Right(graph) = NamedGraph.from(id, JsonLD.arr(array1Entities: _*), JsonLD.arr(array2Entities: _*))
+
+      graph.id       shouldBe id
+      graph.entities shouldBe array1Entities ::: array2Entities
+    }
+
+    "allow instantiating from a JsonLDEntityLike objects" in {
+      val id      = entityIds.generateOne
+      val entity1 = jsonLDEntityLikes.generateOne
+      val entity2 = jsonLDEntityLikes.generateOne
+
+      val Right(graph) = NamedGraph.from(id, entity1, entity2)
+
+      graph.id       shouldBe id
+      graph.entities shouldBe entity1 :: entity2 :: Nil
+    }
+
+    "allow instantiating from a nested JsonLDArrays of JsonLDEntityLike objects" in {
+      val id       = entityIds.generateOne
+      val entities = jsonLDEntityLikes.generateNonEmptyList().toList
+
+      val Right(graph) = NamedGraph.from(id, JsonLD.arr(JsonLD.arr(entities: _*)))
+
+      graph.id       shouldBe id
+      graph.entities shouldBe entities
+    }
+
+    "fail if there are objects other than JsonLDEntityLike" in {
+      val id       = entityIds.generateOne
+      val entities = jsonLDEntityLikes.generateNonEmptyList().toList
+      val other    = jsonLDValues.generateNonEmptyList().toList
+
+      val Left(error) = NamedGraph.from(id, JsonLD.arr(entities ::: other: _*))
+
+      error.getMessage shouldBe "NamedGraph can be instantiated with a Entities and Edges only"
+    }
+  }
+
   "toJson" should {
 
     "turn the given NamedGraph into JSON" in {
