@@ -58,6 +58,9 @@ object NamedGraph {
   def from(id: EntityId, jsonLD: JsonLD, otherJsonLDs: JsonLD*): Either[IllegalArgumentException, NamedGraph] =
     flatten(jsonLD :: otherJsonLDs.toList, List.empty).map(NamedGraph(id, _))
 
+  def fromJsonLDsUnsafe(id: EntityId, jsonLD: JsonLD, otherJsonLDs: JsonLD*): NamedGraph =
+    from(id, jsonLD, otherJsonLDs: _*).fold(throw _, identity)
+
   @tailrec
   private def flatten(toFlatten: List[JsonLD],
                       flattened: List[JsonLDEntityLike]

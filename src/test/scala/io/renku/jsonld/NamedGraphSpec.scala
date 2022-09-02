@@ -18,6 +18,7 @@
 
 package io.renku.jsonld
 
+import cats.data.NonEmptyList
 import cats.syntax.all._
 import io.circe.literal._
 import io.renku.jsonld.JsonLD.JsonLDEntity
@@ -89,7 +90,7 @@ class NamedGraphSpec extends AnyWordSpec with should.Matchers with ScalaCheckPro
       graph.entities shouldBe entities
     }
 
-    "fail if there are objects other than JsonLDEntityLike" in {
+    "return a failure if there are objects other than JsonLDEntityLike" in {
       val id       = entityIds.generateOne
       val entities = jsonLDEntityLikes.generateNonEmptyList().toList
       val other    = jsonLDValues.generateNonEmptyList().toList
@@ -97,6 +98,28 @@ class NamedGraphSpec extends AnyWordSpec with should.Matchers with ScalaCheckPro
       val Left(error) = NamedGraph.from(id, JsonLD.arr(entities ::: other: _*))
 
       error.getMessage shouldBe "NamedGraph can be instantiated with a Entities and Edges only"
+    }
+  }
+
+  "fromJsonLDsUnsafe" should {
+
+    "instantiate successfully from JsonLDEntityLike objects" in {
+      val id = entityIds.generateOne
+      val entities: NonEmptyList[JsonLD] = jsonLDEntityLikes.generateNonEmptyList()
+
+      val graph = NamedGraph.fromJsonLDsUnsafe(id, entities.head, entities.tail: _*)
+
+      graph.id       shouldBe id
+      graph.entities shouldBe entities.toList
+    }
+
+    "throw a failure if there are objects other than JsonLDEntityLike" in {
+      val id = entityIds.generateOne
+      val entities: NonEmptyList[JsonLD] = jsonLDEntityLikes.generateNonEmptyList() :+ jsonLDValues.generateOne
+
+      intercept[IllegalArgumentException] {
+        NamedGraph.fromJsonLDsUnsafe(id, entities.head, entities.tail: _*)
+      }.getMessage shouldBe "NamedGraph can be instantiated with a Entities and Edges only"
     }
   }
 
