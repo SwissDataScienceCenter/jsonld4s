@@ -220,10 +220,10 @@ object JsonLD {
         case _ => false
       }
 
-      lazy val collectEntityLikeEntities: Seq[JsonLD] => (List[JsonLD], List[JsonLDEntityLike]) =
-        _.foldLeft((List.empty[JsonLD], List.empty[JsonLDEntityLike])) {
-          case ((nonEntities, entities), e: JsonLDEntityLike) => nonEntities                -> (entities ::: e :: Nil)
-          case ((nonEntities, entities), e: JsonLD)           => (nonEntities ::: e :: Nil) -> entities
+      lazy val collectEntityLikeEntities: Seq[JsonLD] => (Seq[JsonLD], Seq[JsonLDEntityLike]) =
+        _.partitionEither {
+          case e: JsonLDEntityLike => e.asRight
+          case e: JsonLD           => e.asLeft
         }
 
       lazy val validateFlattened: Either[MalformedJsonLD, Seq[JsonLDEntityLike]] =

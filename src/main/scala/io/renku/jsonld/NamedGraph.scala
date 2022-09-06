@@ -18,6 +18,7 @@
 
 package io.renku.jsonld
 
+import cats.data.Chain
 import cats.syntax.all._
 import io.renku.jsonld.JsonLD.{JsonLDArray, JsonLDEntityLike}
 import io.renku.jsonld.flatten.NamedGraphFlatten
@@ -56,18 +57,18 @@ object NamedGraph {
     NamedGraph(id, entity :: otherEntities.toList)
 
   def from(id: EntityId, jsonLD: JsonLD, otherJsonLDs: JsonLD*): Either[IllegalArgumentException, NamedGraph] =
-    flatten(jsonLD :: otherJsonLDs.toList, List.empty).map(NamedGraph(id, _))
+    flatten(Chain.fromSeq(jsonLD :: otherJsonLDs.toList), Chain.empty).map(c => NamedGraph(id, c.toList))
 
   def fromJsonLDsUnsafe(id: EntityId, jsonLD: JsonLD, otherJsonLDs: JsonLD*): NamedGraph =
     from(id, jsonLD, otherJsonLDs: _*).fold(throw _, identity)
 
   @tailrec
-  private def flatten(toFlatten: List[JsonLD],
-                      flattened: List[JsonLDEntityLike]
-  ): Either[IllegalArgumentException, List[JsonLDEntityLike]] = toFlatten match {
-    case Nil                              => flattened.asRight
-    case (json: JsonLDEntityLike) :: more => flatten(more, flattened ::: json :: Nil)
-    case JsonLDArray(jsons) :: more       => flatten(jsons.toList ::: more, flattened)
-    case _ :: _ => new IllegalArgumentException("NamedGraph can be instantiated with a Entities and Edges only").asLeft
+  private def flatten(toFlatten: Chain[JsonLD],
+                      flattened: Chain[JsonLDEntityLike]
+  ): Either[IllegalArgumentException, Chain[JsonLDEntityLike]] = toFlatten.uncons match {
+    case None                                 => flattened.asRight
+    case Some((json: JsonLDEntityLike, more)) => flatten(more, flattened :+ json)
+    case Some((JsonLDArray(jsons), more))     => flatten(Chain.fromSeq(jsons) concat more, flattened)
+    case _ => new IllegalArgumentException("NamedGraph can be instantiated with a Entities and Edges only").asLeft
   }
 }
