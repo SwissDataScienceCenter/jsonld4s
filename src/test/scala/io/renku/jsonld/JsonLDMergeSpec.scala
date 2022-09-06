@@ -138,8 +138,6 @@ class JsonLDMergeSpec extends AnyWordSpec with ScalaCheckPropertyChecks with sho
       val Right(merged) = JsonLD.arr(entity1, edge).merge
 
       merged.asArray.sequence.flatten should contain theSameElementsAs List(entity1, edge)
-
     }
-
   }
 }

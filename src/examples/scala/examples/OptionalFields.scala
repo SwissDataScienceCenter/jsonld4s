@@ -42,55 +42,53 @@ class OptionalFields extends AnyWordSpec {
   private val applebees     = Organization("Applebee's", legalName = None)
   private val organizations = JsonLD.arr(apple.asJsonLD, applebees.asJsonLD)
 
-  private val expectedJson =
-    json"""
-          [
-            {
-              "@id" : "http://entity/63476538",
-              "@type" : "http://schema.org/Organization",
-              "http://schema.org/legalName" : {
-                "@value" : "Apple Inc."
-              },
-              "http://schema.org/name" : {
-                "@value" : "Apple"
-              }
-            },
-            {
-              "@id" : "http://entity/1512622644",
-              "@type" : "http://schema.org/Organization",
-              "http://schema.org/name" : {
-                "@value" : "Applebee's"
-              }
-            }
-          ]
-        """
+  private val expectedJson = json"""
+    [
+      {
+        "@id" : "http://entity/63476538",
+        "@type" : "http://schema.org/Organization",
+        "http://schema.org/legalName" : {
+          "@value" : "Apple Inc."
+        },
+        "http://schema.org/name" : {
+          "@value" : "Apple"
+        }
+      },
+      {
+        "@id" : "http://entity/1512622644",
+        "@type" : "http://schema.org/Organization",
+        "http://schema.org/name" : {
+          "@value" : "Applebee's"
+        }
+      }
+    ]
+  """
 
   assert(organizations.toJson == expectedJson)
 
   // Decoding
 
-  private val input =
-    """
-      |[
-      |  {
-      |    "@id" : "http://entity/63476538",
-      |    "@type" : "http://schema.org/Organization",
-      |    "http://schema.org/legalName" : {
-      |      "@value" : "Apple Inc."
-      |    },
-      |    "http://schema.org/name" : {
-      |      "@value" : "Apple"
-      |    }
-      |  },
-      |  {
-      |    "@id" : "http://entity/1512622644",
-      |    "@type" : "http://schema.org/Organization",
-      |    "http://schema.org/name" : {
-      |      "@value" : "Applebee's"
-      |    }
-      |  }
-      |]
-      |""".stripMargin
+  private val input = json"""
+    [
+      {
+        "@id" : "http://entity/63476538",
+        "@type" : "http://schema.org/Organization",
+        "http://schema.org/legalName" : {
+          "@value" : "Apple Inc."
+        },
+        "http://schema.org/name" : {
+          "@value" : "Apple"
+        }
+      },
+      {
+        "@id" : "http://entity/1512622644",
+        "@type" : "http://schema.org/Organization",
+        "http://schema.org/name" : {
+          "@value" : "Applebee's"
+        }
+      }
+    ]
+  """.spaces2
 
   private val entityTypes: EntityTypes = EntityTypes.of(schema / "Organization")
 
@@ -104,5 +102,4 @@ class OptionalFields extends AnyWordSpec {
   private val result: Either[ParsingFailure, JsonLD] = parse(input)
 
   assert(result.flatMap((json: JsonLD) => json.cursor.as[List[Organization]]) == Right(List(apple, applebees)))
-
 }

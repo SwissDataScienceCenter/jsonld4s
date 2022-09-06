@@ -18,41 +18,24 @@
 
 package io.renku.jsonld.merge
 
-import cats.syntax.all._
 import io.renku.jsonld.JsonLD._
 import io.renku.jsonld.{EntityId, JsonLD}
 
-trait JsonLDArrayMerge extends JsonLDMerge {
-  this: JsonLDArray =>
+private[jsonld] trait EntitiesMerger {
 
-  override lazy val merge: Either[MalformedJsonLD, JsonLD] =
-    if (!isFlatten) this.asRight
-    else {
-      validateFlattened(jsons).map { jsons =>
-        val (edges, entities) = separateEdgesAndEntities(jsons)
+  def mergeEntities(jsons: Seq[JsonLDEntityLike]): Seq[JsonLDEntityLike] = {
+    val (edges, entities) = separateEdgesAndEntities(jsons)
 
-        val (linkedEdges, unlinkedEdges) = edges.partition(edge => entities.exists(_.id == edge.source))
+    val (linkedEdges, unlinkedEdges) = edges.partition(edge => entities.exists(_.id == edge.source))
 
-        JsonLD.arr(entities.map(mergeEdges(linkedEdges.groupBy(_.source))) ::: unlinkedEdges: _*)
-      }
-    }
+    entities.map(mergeEdges(linkedEdges.groupBy(_.source))) ::: unlinkedEdges
+  }
 
-  private lazy val separateEdgesAndEntities: Seq[JsonLD] => (List[JsonLDEdge], List[JsonLDEntity]) =
+  private lazy val separateEdgesAndEntities: Seq[JsonLDEntityLike] => (List[JsonLDEdge], List[JsonLDEntity]) =
     _.foldLeft(List.empty[JsonLDEdge] -> List.empty[JsonLDEntity]) {
       case ((edges, entities), edge: JsonLDEdge)     => (edges ::: edge :: Nil) -> entities
       case ((edges, entities), entity: JsonLDEntity) => edges                   -> (entities ::: entity :: Nil)
       case ((edges, entities), _)                    => edges                   -> entities
-    }
-
-  private def validateFlattened(jsons: Seq[JsonLD]) =
-    findIllegalEntities(jsons)
-      .toLeft(right = jsons)
-      .leftMap(_ => MalformedJsonLD("Flattened JsonLD contains illegal objects"))
-
-  private lazy val findIllegalEntities: Seq[JsonLD] => Option[JsonLD] =
-    _.find {
-      case _: JsonLDEdge | _: JsonLDEntity => false
-      case _                               => true
     }
 
   private def mergeEdges(edgesGrouped: Map[EntityId, List[JsonLDEdge]]): JsonLDEntity => JsonLDEntity = { entity =>
@@ -73,19 +56,9 @@ trait JsonLDArrayMerge extends JsonLDMerge {
       entity.copy(properties = updatedProperties)
   }
 
-  private def updateProperty(
-      jsonLDTargetEntity: JsonLDEntityId[EntityId]
-  ): JsonLD => JsonLD = propertyValue =>
-    propertyValue.asArray.fold(JsonLD.arr(jsonLDTargetEntity)) { jsonLDArr =>
-      if (jsonLDArr.contains(jsonLDTargetEntity)) {
-        JsonLD.arr(jsonLDArr: _*)
-      } else {
-        JsonLD.arr(jsonLDArr.appended(jsonLDTargetEntity): _*)
-      }
+  private def updateProperty(targetEntityId: JsonLDEntityId[EntityId]): JsonLD => JsonLD = propertyValue =>
+    propertyValue.asArray.fold(JsonLD.arr(targetEntityId)) { jsonLDArr =>
+      if (jsonLDArr contains targetEntityId) JsonLD.arr(jsonLDArr: _*)
+      else JsonLD.arr(jsonLDArr.appended(targetEntityId):          _*)
     }
-
-  private lazy val isFlatten: Boolean = jsons.exists {
-    case _: JsonLDEdge => true
-    case _ => false
-  }
 }

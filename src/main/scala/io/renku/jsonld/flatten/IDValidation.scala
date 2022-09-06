@@ -23,7 +23,7 @@ import io.renku.jsonld.JsonLD.{JsonLDEntity, MalformedJsonLD}
 
 private object IDValidation {
 
-  def checkForUniqueIds(flattenedJsons: List[JsonLD]): Either[MalformedJsonLD, List[JsonLD]] =
+  def checkForUniqueIds[T <: JsonLD](flattenedJsons: List[T]): Either[MalformedJsonLD, List[T]] =
     findNotEqualEntities(flattenedJsons) match {
       case Nil      => Right(flattenedJsons)
       case entities => Left(MalformedJsonLD(s"Not equal entity(ies) in json-ld: ${entities.mkString(",")}"))

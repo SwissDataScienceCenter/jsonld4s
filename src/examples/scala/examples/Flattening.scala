@@ -19,9 +19,9 @@
 package examples
 
 import examples.ExampleSchemas.schema
-import io.renku.jsonld.syntax._
-import io.renku.jsonld._
 import io.circe.literal._
+import io.renku.jsonld._
+import io.renku.jsonld.syntax._
 import org.scalatest.wordspec.AnyWordSpec
 
 class Flattening extends AnyWordSpec {
@@ -48,69 +48,64 @@ class Flattening extends AnyWordSpec {
   private val members = List(User("User1"), User("User2"))
   private val project = Project(name = "MyProject", members)
 
-  private val expectedJsonTreeFull =
-    json"""
-          {
-            "@id" : "http://example.org/projects/46955437",
-            "@type" : "http://schema.org/Project",
-            "http://schema.org/member" : [
-              {
-                "@id" : "http://example.org/users/82025894",
-                "@type" : "http://schema.org/Person",
-                "http://schema.org/name" : {
-                  "@value" : "User1"
-                }
-              },
-              {
-                "@id" : "http://example.org/users/82025895",
-                "@type" : "http://schema.org/Person",
-                "http://schema.org/name" : {
-                  "@value" : "User2"
-                }
-              }
-            ],
-            "http://schema.org/name" : {
-              "@value" : "MyProject"
-            }
-          }
-        """
+  private val expectedJsonTreeFull = json"""{
+    "@id" : "http://example.org/projects/46955437",
+    "@type" : "http://schema.org/Project",
+    "http://schema.org/member" : [
+      {
+        "@id" : "http://example.org/users/82025894",
+        "@type" : "http://schema.org/Person",
+        "http://schema.org/name" : {
+          "@value" : "User1"
+        }
+      },
+      {
+        "@id" : "http://example.org/users/82025895",
+        "@type" : "http://schema.org/Person",
+        "http://schema.org/name" : {
+          "@value" : "User2"
+        }
+      }
+    ],
+    "http://schema.org/name" : {
+      "@value" : "MyProject"
+    }
+  }"""
 
   assert(project.asJsonLD.toJson == expectedJsonTreeFull)
 
-  private val expectedJsonFlattened =
-    json"""
-          [
-            {
-              "@id" : "http://example.org/projects/46955437",
-              "@type" : "http://schema.org/Project",
-              "http://schema.org/member" : [
-                {
-                  "@id" : "http://example.org/users/82025894"
-                },
-                {
-                  "@id" : "http://example.org/users/82025895"
-                }
-              ],
-              "http://schema.org/name" : {
-                "@value" : "MyProject"
-              }
-            },
-            {
-              "@id" : "http://example.org/users/82025894",
-              "@type" : "http://schema.org/Person",
-              "http://schema.org/name" : {
-                "@value" : "User1"
-              }
-            },
-            {
-              "@id" : "http://example.org/users/82025895",
-              "@type" : "http://schema.org/Person",
-              "http://schema.org/name" : {
-                "@value" : "User2"
-              }
-            }
-          ]
-        """
+  private val expectedJsonFlattened = json"""
+    [
+      {
+        "@id" : "http://example.org/projects/46955437",
+        "@type" : "http://schema.org/Project",
+        "http://schema.org/member" : [
+          {
+            "@id" : "http://example.org/users/82025894"
+          },
+          {
+            "@id" : "http://example.org/users/82025895"
+          }
+        ],
+        "http://schema.org/name" : {
+          "@value" : "MyProject"
+        }
+      },
+      {
+        "@id" : "http://example.org/users/82025894",
+        "@type" : "http://schema.org/Person",
+        "http://schema.org/name" : {
+          "@value" : "User1"
+        }
+      },
+      {
+        "@id" : "http://example.org/users/82025895",
+        "@type" : "http://schema.org/Person",
+        "http://schema.org/name" : {
+          "@value" : "User2"
+        }
+      }
+    ]"""
 
   assert(project.asJsonLD.flatten.fold(throw _, identity).toJson == expectedJsonFlattened)
 
@@ -131,5 +126,4 @@ class Flattening extends AnyWordSpec {
   }
 
   assert(project.asJsonLD.flatten.flatMap(_.cursor.as[List[Project]]) == Right(List(project)))
-
 }

@@ -42,6 +42,21 @@ private object Flatten {
         topLevelEntities.asRight
     }
 
+  @tailrec
+  final def deNestEntities(toProcess:        List[JsonLDEntityLike],
+                           topLevelEntities: List[JsonLDEntityLike]
+  ): Either[MalformedJsonLD, List[JsonLDEntityLike]] = toProcess match {
+    case (entity: JsonLDEntity) :: leftToProcess =>
+      val processNext =
+        extractEntityProperties(entity.properties) ::: extractReverseProperties(entity.reverse.properties)
+      val (currentEntityDeNested, edges) = transformEntityProperties(entity)
+      deNestEntities(processNext ::: leftToProcess, topLevelEntities ::: currentEntityDeNested :: edges)
+    case (edge: JsonLDEdge) :: leftToProcess =>
+      deNestEntities(leftToProcess, topLevelEntities ::: edge :: Nil)
+    case Nil =>
+      topLevelEntities.asRight
+  }
+
   private def extractEntityProperties(properties: Map[Property, JsonLD]) =
     properties.foldLeft(List.empty[JsonLDEntity]) {
       case (acc, (_, nestedEntity: JsonLDEntity)) => nestedEntity :: acc

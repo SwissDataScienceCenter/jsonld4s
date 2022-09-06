@@ -21,12 +21,14 @@ package io.renku.jsonld
 import cats.syntax.all._
 import io.circe.{Encoder, Json, JsonNumber}
 import io.renku.jsonld.flatten.{JsonLDArrayFlatten, JsonLDEntityFlatten, JsonLDFlatten}
-import io.renku.jsonld.merge.{JsonLDArrayMerge, JsonLDMerge}
+import io.renku.jsonld.merge.{EntitiesMerger, JsonLDMerge}
 
 import java.io.Serializable
 import java.time.{Instant, LocalDate}
 
 abstract class JsonLD extends JsonLDMerge with JsonLDFlatten with Product with Serializable {
+
+  type T <: JsonLD
 
   def toJson: Json
 
@@ -97,12 +99,14 @@ object JsonLD {
   def edge(source: EntityId, property: Property, target: EntityId): JsonLDEdge =
     JsonLDEdge(source, property, target)
 
-  private[jsonld] final case class JsonLDEntity(id:         EntityId,
-                                                types:      EntityTypes,
-                                                properties: Map[Property, JsonLD],
-                                                reverse:    Reverse
-  ) extends JsonLD
+  sealed trait JsonLDEntityLike extends JsonLD
+
+  final case class JsonLDEntity(id: EntityId, types: EntityTypes, properties: Map[Property, JsonLD], reverse: Reverse)
+      extends JsonLD
+      with JsonLDEntityLike
       with JsonLDEntityFlatten {
+
+    override type T = JsonLD
 
     override lazy val toJson: Json = Json.obj(
       List(
@@ -129,7 +133,11 @@ object JsonLD {
     override lazy val merge:       Either[MalformedJsonLD, JsonLD] = this.asRight
   }
 
-  private[jsonld] final case class JsonLDEdge(source: EntityId, property: Property, target: EntityId) extends JsonLD {
+  final case class JsonLDEdge(source: EntityId, property: Property, target: EntityId)
+      extends JsonLD
+      with JsonLDEntityLike {
+
+    override type T = JsonLD
 
     override lazy val toJson: Json = Json.obj(
       "@id"        -> source.asJson,
@@ -148,6 +156,8 @@ object JsonLD {
       maybeType:      Option[EntityTypes] = None
   )(implicit encoder: Encoder[V])
       extends JsonLD {
+
+    override type T = JsonLD
 
     override lazy val toJson: Json = maybeType match {
       case None    => Json.obj("@value" -> value.asJson)
@@ -179,6 +189,7 @@ object JsonLD {
   }
 
   private[jsonld] final case object JsonLDNull extends JsonLD {
+    override type T = JsonLD
     override lazy val toJson:      Json                            = Json.Null
     override lazy val entityId:    Option[EntityId]                = None
     override lazy val entityTypes: Option[EntityTypes]             = None
@@ -198,7 +209,32 @@ object JsonLD {
   private[jsonld] final case class JsonLDArray(jsons: Seq[JsonLD])
       extends JsonLD
       with JsonLDArrayFlatten
-      with JsonLDArrayMerge {
+      with EntitiesMerger {
+
+    override type T = JsonLD
+
+    override lazy val merge: Either[MalformedJsonLD, T] = {
+
+      def isFlatten(jsons: Seq[JsonLD]): Boolean = jsons.exists {
+        case _: JsonLDEdge => true
+        case _ => false
+      }
+
+      lazy val collectEntityLikeEntities: Seq[JsonLD] => (Seq[JsonLD], Seq[JsonLDEntityLike]) =
+        _.partitionEither {
+          case e: JsonLDEntityLike => e.asRight
+          case e: JsonLD           => e.asLeft
+        }
+
+      lazy val validateFlattened: Either[MalformedJsonLD, Seq[JsonLDEntityLike]] =
+        collectEntityLikeEntities(jsons) match {
+          case (Nil, entities) => entities.asRight
+          case _               => MalformedJsonLD("Flattened JsonLD contains illegal objects").asLeft
+        }
+
+      if (!isFlatten(jsons)) this.asRight
+      else validateFlattened map mergeEntities map JsonLDArray
+    }
 
     override lazy val hashCode: Int = jsons.size.hashCode() + jsons.toSet.hashCode()
 
@@ -214,6 +250,7 @@ object JsonLD {
   }
 
   private[jsonld] final case class JsonLDEntityId[V <: EntityId](id: V)(implicit encoder: Encoder[V]) extends JsonLD {
+    override type T = JsonLD
     override lazy val toJson:      Json                            = Json.obj("@id" -> id.asJson)
     override lazy val entityId:    Option[EntityId]                = None
     override lazy val entityTypes: Option[EntityTypes]             = None

@@ -19,9 +19,9 @@
 package examples
 
 import examples.ExampleSchemas.prov
+import io.circe.literal._
 import io.renku.jsonld._
 import io.renku.jsonld.syntax._
-import io.circe.literal._
 import org.scalatest.wordspec.AnyWordSpec
 
 class BasicEncoding extends AnyWordSpec {
@@ -36,15 +36,13 @@ class BasicEncoding extends AnyWordSpec {
     )
   }
 
-  private val expectedOutput =
-    json"""{
-             "@id" : "http://entity/23424",
-             "@type" : "http://www.w3.org/ns/prov#Entity",
-             "http://www.w3.org/ns/prov#value" : {
-               "@value" : "some value"
-             }
-           }
-           """
+  private val expectedOutput = json"""{
+    "@id" : "http://entity/23424",
+    "@type" : "http://www.w3.org/ns/prov#Entity",
+    "http://www.w3.org/ns/prov#value" : {
+      "@value" : "some value"
+    }
+  }"""
 
   assert(MyType(value = "some value").asJsonLD.toJson == expectedOutput)
 }
