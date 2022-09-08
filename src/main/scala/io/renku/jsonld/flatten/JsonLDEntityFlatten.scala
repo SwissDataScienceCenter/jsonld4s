@@ -27,7 +27,7 @@ trait JsonLDEntityFlatten extends JsonLDFlatten {
   import Flatten._
   import IDValidation._
 
-  lazy val flatten: Either[MalformedJsonLD, JsonLD] =
+  override lazy val flatten: Either[MalformedJsonLD, JsonLD] =
     deNest(toProcess = List(this), topLevelEntities = Nil)
       .flatMap(jsonLDs => checkForUniqueIds(jsonLDs.distinct))
       .map(flattenedJsonLDs => JsonLD.arr(flattenedJsonLDs: _*))

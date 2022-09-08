@@ -24,5 +24,5 @@ import io.renku.jsonld.JsonLD.MalformedJsonLD
 trait JsonLDFlatten {
   self: JsonLD =>
 
-  def flatten: Either[MalformedJsonLD, T]
+  def flatten: Either[MalformedJsonLD, JsonLD]
 }

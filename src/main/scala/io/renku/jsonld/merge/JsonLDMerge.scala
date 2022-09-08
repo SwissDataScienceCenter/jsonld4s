@@ -24,5 +24,5 @@ import io.renku.jsonld.JsonLD.MalformedJsonLD
 trait JsonLDMerge {
   self: JsonLD =>
 
-  def merge: Either[MalformedJsonLD, T]
+  def merge: Either[MalformedJsonLD, JsonLD]
 }

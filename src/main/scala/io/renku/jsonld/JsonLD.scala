@@ -28,8 +28,6 @@ import java.time.{Instant, LocalDate}
 
 abstract class JsonLD extends JsonLDMerge with JsonLDFlatten with Product with Serializable {
 
-  type T <: JsonLD
-
   def toJson: Json
 
   def entityId: Option[EntityId]
@@ -65,7 +63,7 @@ object JsonLD {
 
   def fromEntityId(id: EntityId): JsonLD = JsonLDEntityId(id)
 
-  def arr(jsons: JsonLD*): JsonLD = JsonLDArray(jsons)
+  def arr(jsons: JsonLD*): JsonLDArray = JsonLDArray(jsons)
 
   def entity(
       id:            EntityId,
@@ -106,8 +104,6 @@ object JsonLD {
       with JsonLDEntityLike
       with JsonLDEntityFlatten {
 
-    override type T = JsonLD
-
     override lazy val toJson: Json = Json.obj(
       List(
         "@id"   -> id.asJson,
@@ -137,8 +133,6 @@ object JsonLD {
       extends JsonLD
       with JsonLDEntityLike {
 
-    override type T = JsonLD
-
     override lazy val toJson: Json = Json.obj(
       "@id"        -> source.asJson,
       property.url -> JsonLD.fromEntityId(target).toJson
@@ -156,8 +150,6 @@ object JsonLD {
       maybeType:      Option[EntityTypes] = None
   )(implicit encoder: Encoder[V])
       extends JsonLD {
-
-    override type T = JsonLD
 
     override lazy val toJson: Json = maybeType match {
       case None    => Json.obj("@value" -> value.asJson)
@@ -189,7 +181,6 @@ object JsonLD {
   }
 
   private[jsonld] final case object JsonLDNull extends JsonLD {
-    override type T = JsonLD
     override lazy val toJson:      Json                            = Json.Null
     override lazy val entityId:    Option[EntityId]                = None
     override lazy val entityTypes: Option[EntityTypes]             = None
@@ -206,14 +197,9 @@ object JsonLD {
       }
   }
 
-  private[jsonld] final case class JsonLDArray(jsons: Seq[JsonLD])
-      extends JsonLD
-      with JsonLDArrayFlatten
-      with EntitiesMerger {
+  final case class JsonLDArray(jsons: Seq[JsonLD]) extends JsonLD with JsonLDArrayFlatten with EntitiesMerger {
 
-    override type T = JsonLD
-
-    override lazy val merge: Either[MalformedJsonLD, T] = {
+    override lazy val merge: Either[MalformedJsonLD, JsonLD] = {
 
       def isFlatten(jsons: Seq[JsonLD]): Boolean = jsons.exists {
         case _: JsonLDEdge => true
@@ -250,7 +236,6 @@ object JsonLD {
   }
 
   private[jsonld] final case class JsonLDEntityId[V <: EntityId](id: V)(implicit encoder: Encoder[V]) extends JsonLD {
-    override type T = JsonLD
     override lazy val toJson:      Json                            = Json.obj("@id" -> id.asJson)
     override lazy val entityId:    Option[EntityId]                = None
     override lazy val entityTypes: Option[EntityTypes]             = None

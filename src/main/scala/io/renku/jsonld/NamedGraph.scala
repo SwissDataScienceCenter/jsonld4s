@@ -34,8 +34,6 @@ final case class NamedGraph(id: EntityId, entities: Seq[JsonLDEntityLike])
   import io.circe.Json
   import io.circe.literal._
 
-  override type T = NamedGraph
-
   override lazy val toJson: Json = json"""{
     "@id":    ${id.asJson},
     "@graph": ${entities.map(_.toJson)}
