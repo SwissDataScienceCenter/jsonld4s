@@ -99,6 +99,7 @@ releaseProcess := Seq[ReleaseStep](
 )
 
 releaseUseGlobalVersion := false
+releaseVersionBump := sbtrelease.Version.Bump.Minor
 
 organizationName := "Swiss Data Science Center (SDSC)"
 startYear := Some(java.time.LocalDate.now().getYear)
