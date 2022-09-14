@@ -137,7 +137,9 @@ class DefaultGraphSpec extends AnyWordSpec with should.Matchers with ScalaCheckP
   "asArray" should {
 
     "return a single element Array with itself" in {
-      defaultGraphs.generateOne.asArray shouldBe Some(Vector(defaultGraphs.generateOne))
+      val graph = defaultGraphs.generateOne
+
+      graph.asArray shouldBe Some(Vector(graph))
     }
   }
 

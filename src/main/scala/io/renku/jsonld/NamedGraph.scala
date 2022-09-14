@@ -23,7 +23,6 @@ import cats.syntax.all._
 import io.renku.jsonld.JsonLD.{JsonLDArray, JsonLDEntityLike, MalformedJsonLD}
 import io.renku.jsonld.flatten.{DefaultGraphFlatten, JsonLDFlatten, NamedGraphFlatten}
 import io.renku.jsonld.merge.EntitiesMerger
-import GraphOps._
 
 import scala.annotation.tailrec
 
@@ -55,7 +54,7 @@ final case class NamedGraph(id: EntityId, entities: Seq[JsonLDEntityLike])
     this.copy(entities = mergeEntities(entities).toList).asRight
 }
 
-object NamedGraph {
+object NamedGraph extends GraphOps("NamedGraph") {
 
   def apply(id: EntityId, entity: JsonLDEntityLike, otherEntities: JsonLDEntityLike*): NamedGraph =
     NamedGraph(id, entity :: otherEntities.toList)
@@ -89,7 +88,7 @@ final case class DefaultGraph(entities: Seq[JsonLDEntityLike])
     this.copy(entities = mergeEntities(entities).toList).asRight
 }
 
-object DefaultGraph {
+object DefaultGraph extends GraphOps("DefaultGraph") {
 
   def apply(entity: JsonLDEntityLike, otherEntities: JsonLDEntityLike*): DefaultGraph =
     DefaultGraph(entity :: otherEntities.toList)
@@ -101,15 +100,15 @@ object DefaultGraph {
     from(jsonLD, otherJsonLDs: _*).fold(throw _, identity)
 }
 
-private object GraphOps {
+abstract class GraphOps(graphType: String) {
 
   @tailrec
-  final def flatten(toFlatten: Chain[JsonLD],
-                    flattened: Chain[JsonLDEntityLike]
+  protected final def flatten(toFlatten: Chain[JsonLD],
+                              flattened: Chain[JsonLDEntityLike]
   ): Either[IllegalArgumentException, Chain[JsonLDEntityLike]] = toFlatten.uncons match {
     case None                                 => flattened.asRight
     case Some((json: JsonLDEntityLike, more)) => flatten(more, flattened :+ json)
     case Some((JsonLDArray(jsons), more))     => flatten(Chain.fromSeq(jsons) concat more, flattened)
-    case _ => new IllegalArgumentException("DefaultGraph can be instantiated with a Entities and Edges only").asLeft
+    case _ => new IllegalArgumentException(s"$graphType can be instantiated with a Entities and Edges only").asLeft
   }
 }
