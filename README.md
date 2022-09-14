@@ -13,9 +13,10 @@ The library comes with an API allowing creation of the following JSON-LD structu
 * edges; `io.renku.jsonld.JsonLD.edge`;
 * arrays: `io.renku.jsonld.JsonLD.arr`;
 * entity IDs; `io.renku.jsonld.EntityId.of` and `io.renku.jsonld.EntityId.blank` for generating blank node IDs;
-* named graphs; `io.renku.jsonld.NamedGraph` and `io.renku.jsonld.NamedGraph.from` controlling effects happening on instantiation. 
+* named graphs; `io.renku.jsonld.NamedGraph` and `io.renku.jsonld.NamedGraph.from` controlling effects happening on instantiation; 
+* default graphs; `io.renku.jsonld.DefaultGraph` and `io.renku.jsonld.DefaultGraph.from` controlling effects happening on instantiation. 
 
-A `NamedGraph` can be instantiated with a list of entities and/or edges. In cases when a `NamedGraph` supposed to be instantiated with a generic list of `JsonLD` objects, the `io.renku.jsonld.NamedGraph.from` controlling effects should be used. The factory checks if all the objects are either entities or edges and returns a failure if at least one object is of different type.  
+Both `NamedGraph` and `DefaultGraph` can be instantiated with a list of entities and/or edges. In cases when they supposed to be instantiated with a generic list of `JsonLD` objects, the `from` factory controlling effects should be used. The factory checks if all the objects are either entities or edges and returns a failure if at least one object is of different type.  
 
 ## Encoding to JSON-LD
 

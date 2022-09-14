@@ -81,4 +81,8 @@ object JsonLDGenerators {
     id       <- entityIds
     entities <- jsonLDEntities.toGeneratorOfNonEmptyList()
   } yield NamedGraph(id, entities.head, entities.tail: _*)
+
+  implicit val defaultGraphs: Gen[DefaultGraph] = for {
+    entities <- jsonLDEntities.toGeneratorOfNonEmptyList()
+  } yield DefaultGraph(entities.head, entities.tail: _*)
 }

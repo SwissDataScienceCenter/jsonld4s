@@ -20,19 +20,33 @@ package io.renku.jsonld.flatten
 
 import cats.syntax.all._
 import io.renku.jsonld.JsonLD._
-import io.renku.jsonld.NamedGraph
 import io.renku.jsonld.merge.EntitiesMerger
+import io.renku.jsonld.{DefaultGraph, Graph, NamedGraph}
 
-trait NamedGraphFlatten extends JsonLDFlatten {
-  self: NamedGraph with EntitiesMerger =>
+trait NamedGraphFlatten extends JsonLDFlatten with GraphFlatten {
+  self: NamedGraph =>
+
+  override lazy val flatten: Either[MalformedJsonLD, NamedGraph] =
+    doFlattening.map(flattened => this.copy(entities = flattened))
+}
+
+trait DefaultGraphFlatten extends JsonLDFlatten with GraphFlatten {
+  self: DefaultGraph =>
+
+  override lazy val flatten: Either[MalformedJsonLD, DefaultGraph] =
+    doFlattening.map(flattened => this.copy(entities = flattened))
+}
+
+trait GraphFlatten extends EntitiesMerger {
+  self: Graph =>
 
   import Flatten._
   import IDValidation._
 
-  override lazy val flatten: Either[MalformedJsonLD, NamedGraph] = for {
+  protected lazy val doFlattening: Either[MalformedJsonLD, List[JsonLDEntityLike]] = for {
     flattened <- flattenEntities
     validated <- checkForUniqueIds(flattened.distinct)
-  } yield this.copy(entities = mergeEntities(validated).toList)
+  } yield mergeEntities(validated).toList
 
   private def flattenEntities: Either[MalformedJsonLD, List[JsonLDEntityLike]] =
     entities.foldLeft(Either.right[MalformedJsonLD, List[JsonLDEntityLike]](List.empty[JsonLDEntityLike])) {
