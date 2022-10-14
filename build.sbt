@@ -24,7 +24,7 @@ lazy val root = Project(
   .settings(
     organization := "io.renku",
     name := "jsonld4s",
-    scalaVersion := "2.13.9",
+    scalaVersion := "2.13.10",
     inConfig(Examples)(Defaults.testSettings)
   )
   .enablePlugins(AutomateHeaderPlugin)
