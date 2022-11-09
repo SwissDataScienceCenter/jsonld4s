@@ -19,6 +19,7 @@
 package io.renku.jsonld
 
 import JsonLDDecoder._
+import cats.data.NonEmptyList
 import cats.syntax.all._
 import io.circe.DecodingFailure
 import io.renku.jsonld.Cursor.FlattenedJsonCursor
@@ -717,6 +718,16 @@ class JsonLDDecoderSpec
         .fold(fail(_), identity)
         .cursor
         .as[List[Parents]] shouldBe List(parents).asRight
+    }
+
+    "decode non-empty list successful" in {
+      val jsonLD = List(Child("child 1"), Child("child 2")).asJsonLD.flatten.fold(fail(_), identity)
+      jsonLD.cursor.as[NonEmptyList[Child]] shouldBe NonEmptyList.of(Child("child 1"), Child("child 2")).asRight
+    }
+
+    "decode non-empty list not successful" in {
+      val jsonLD = List.empty[Child].asJsonLD.flatten.fold(fail(_), identity)
+      jsonLD.cursor.as[NonEmptyList[Child]] shouldBe Left(DecodingFailure("Expected a non-empty list", Nil))
     }
   }
 

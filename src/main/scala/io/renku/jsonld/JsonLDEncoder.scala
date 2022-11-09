@@ -19,6 +19,8 @@
 package io.renku.jsonld
 
 import cats.Contravariant
+import cats.data.NonEmptyList
+import cats.syntax.contravariant._
 
 import java.time.{Instant, LocalDate}
 
@@ -55,6 +57,9 @@ object JsonLDEncoder {
       ordering:    Ordering[A]
   ): JsonLDEncoder[Set[A]] =
     (seq: Set[A]) => JsonLD.arr(seq.toList.sorted map (itemEncoder(_)): _*)
+
+  final implicit def encodeNonEmptyList[A](implicit itemEncoder: JsonLDEncoder[A]): JsonLDEncoder[NonEmptyList[A]] =
+    encodeList[A].contramap(_.toList)
 
   final implicit val encodeString:    JsonLDEncoder[String]    = (a: String) => JsonLD.fromString(a)
   final implicit val encodeInt:       JsonLDEncoder[Int]       = (a: Int) => JsonLD.fromInt(a)

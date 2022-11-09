@@ -19,6 +19,7 @@
 package io.renku.jsonld
 
 import cats.syntax.all._
+import cats.data.NonEmptyList
 import io.circe.{DecodingFailure, JsonNumber}
 import io.renku.jsonld.Cursor._
 import io.renku.jsonld.JsonLD._
@@ -128,6 +129,12 @@ object JsonLDDecoder {
   }
 
   implicit def decodeList[I](implicit itemDecoder: JsonLDDecoder[I]): JsonLDDecoder[List[I]] = new JsonLDListDecoder[I]
+
+  implicit def decodeSet[I](implicit itemDecoder: JsonLDDecoder[I]): JsonLDDecoder[Set[I]] =
+    decodeList[I].emap(_.toSet.asRight)
+
+  implicit def decodeNonEmptyList[I](implicit dt: JsonLDDecoder[I]): JsonLDDecoder[NonEmptyList[I]] =
+    decodeList[I].emap(list => NonEmptyList.fromList(list).toRight(s"Expected a non-empty list"))
 }
 
 class JsonLDEntityDecoder[A](
