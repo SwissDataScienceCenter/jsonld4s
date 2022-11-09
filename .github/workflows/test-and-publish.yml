@@ -90,14 +90,6 @@ jobs:
           echo -n "$GPG_SIGNING_KEY_SONATYPE" | base64 --decode | gpg --import
         env:
           GPG_SIGNING_KEY_SONATYPE: ${{ secrets.GPG_SIGNING_KEY_SONATYPE }}
-      - name: Set up Sonatype credentials
-        run: |
-          mkdir -p ~/.sbt/1.0/
-          echo -n 'credentials += Credentials(Path.userHome / ".sbt" / "sonatype_credentials")' >> ~/.sbt/1.0/sonatype.sbt
-          echo 'realm=Sonatype Nexus Repository Manager
-                host=s01.oss.sonatype.org
-                user=travissdsc
-                password='${{ secrets.SONATYPE_PASSWORD }} >> ~/.sbt/sonatype_credentials
       - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
@@ -114,6 +106,9 @@ jobs:
             ~/.sbt
           key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
       - name: Publish to Sonatype
+        env:
+          SONATYPE_USERNAME: travissdsc
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
         run: |
           sudo rm -rf .git/index.lock
           git config --global user.email "renku@datascience.ch"

@@ -48,9 +48,6 @@ libraryDependencies += "org.scalamock"     %% "scalamock"       % "5.2.0"   % Te
 libraryDependencies += "org.scalatest"     %% "scalatest"       % "3.2.14"  % Test
 libraryDependencies += "org.scalatestplus" %% "scalacheck-1-14" % "3.2.2.0" % Test
 
-//Compile / sourceGenerators +=
-//  generate((Compile / sourceManaged).value / "examples")
-
 ThisBuild / organizationName := "SwissDataScienceCenter"
 ThisBuild / organizationHomepage := Some(url("https://www.datascience.ch"))
 
@@ -91,7 +88,7 @@ releaseProcess := Seq[ReleaseStep](
   runClean,
   setReleaseVersion,
   commitReleaseVersion,
-  releaseStepCommandAndRemaining("+publishSigned"),
+  releaseStepCommand("publishSigned"),
   releaseStepCommand("sonatypeBundleRelease"),
   setNextVersion,
   commitNextVersion,
