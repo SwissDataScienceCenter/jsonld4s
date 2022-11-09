@@ -88,6 +88,7 @@ jobs:
       - name: Configure GPG Key
         run: |
           echo -n "$GPG_SIGNING_KEY_SONATYPE" | base64 --decode | gpg --import
+          gpg --list-key
         env:
           GPG_SIGNING_KEY_SONATYPE: ${{ secrets.GPG_SIGNING_KEY_SONATYPE }}
       - uses: actions/checkout@v3
@@ -111,6 +112,8 @@ jobs:
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
         run: |
           sudo rm -rf .git/index.lock
+          echo listing keys
+          gpg --list-key
           git config --global user.email "renku@datascience.ch"
           git config --global user.name "Renku Bot"
           git switch -c temp
