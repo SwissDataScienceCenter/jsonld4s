@@ -43,60 +43,32 @@ libraryDependencies += "org.typelevel"  %% "cats-core" % "2.8.0"
 
 // Test dependencies
 libraryDependencies += "eu.timepit"        %% "refined"         % "0.10.1"  % Test
-libraryDependencies += "org.scalacheck"    %% "scalacheck"      % "1.17.0"  % Test // version 1.15.1 is broken
+libraryDependencies += "org.scalacheck"    %% "scalacheck"      % "1.17.0"  % Test
 libraryDependencies += "org.scalamock"     %% "scalamock"       % "5.2.0"   % Test
 libraryDependencies += "org.scalatest"     %% "scalatest"       % "3.2.14"  % Test
 libraryDependencies += "org.scalatestplus" %% "scalacheck-1-14" % "3.2.2.0" % Test
 
-ThisBuild / organizationName := "SwissDataScienceCenter"
-ThisBuild / organizationHomepage := Some(url("https://www.datascience.ch"))
-
-ThisBuild / scmInfo := Some(
-  ScmInfo(
-    url("https://github.com/SwissDataScienceCenter/jsonld4s"),
-    "scm:git@github.com:SwissDataScienceCenter/jsonld4s.git"
+inThisBuild(
+  List(
+    organization := "SwissDataScienceCenter",
+    homepage := Some(url("https://www.datascience.ch")),
+    licenses := List("Apache 2.0" -> new URL("http://www.apache.org/licenses/")),
+    description := "Scala Circe extension for JSON-LD",
+    homepage := Some(url("https://github.com/SwissDataScienceCenter/jsonld4s")),
+    developers := List(
+      Developer(
+        id = "SwissDataScienceCenter",
+        name = "Swiss Data Science Center",
+        email = "renku@datascience.ch",
+        url = url("https://www.datascience.ch")
+      )
+    ),
+    sonatypeProfileName := "io.renku",
+    publishMavenStyle := true,
+    sonatypeCredentialHost := "s01.oss.sonatype.org",
+    sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
   )
 )
-
-ThisBuild / developers := List(
-  Developer(
-    id = "SwissDataScienceCenter",
-    name = "Swiss Data Science Center",
-    email = "renku@datascience.ch",
-    url = url("https://www.datascience.ch")
-  )
-)
-
-ThisBuild / description := "Scala Circe extension for JSON-LD"
-ThisBuild / homepage := Some(url("https://github.com/SwissDataScienceCenter/jsonld4s"))
-
-// Remove all additional repository other than Maven Central from POM
-ThisBuild / pomIncludeRepository := { _ => false }
-
-ThisBuild / versionScheme := Some("early-semver")
-
-// Sonatype plugin stuff
-ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
-
-publishTo := sonatypePublishToBundle.value
-
-import ReleaseTransformations._
-
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  setReleaseVersion,
-  commitReleaseVersion,
-  releaseStepCommand("publishSigned"),
-  releaseStepCommand("sonatypeBundleRelease"),
-  setNextVersion,
-  commitNextVersion,
-  pushChanges
-)
-
-releaseUseGlobalVersion := false
-releaseVersionBump := sbtrelease.Version.Bump.Minor
 
 organizationName := "Swiss Data Science Center (SDSC)"
 startYear := Some(java.time.LocalDate.now().getYear)

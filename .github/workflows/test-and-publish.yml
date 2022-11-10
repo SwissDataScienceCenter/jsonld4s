@@ -76,21 +76,9 @@ jobs:
         run: sbt scalafmtCheck
   publish:
     name: Publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04 
     needs: [ unit-tests, formatter ]
-    env:
-      DOCKER_LABEL: ${{ github.head_ref }}
-      DOCKER_PUSH_LATEST: true
-      DOCKER_REPOSITORY: renku/
-      HELM_URL: https://storage.googleapis.com/kubernetes-helm
-      HELM_TGZ: helm-v2.17.0-linux-amd64.tar.gz
     steps:
-      - name: Configure GPG Key
-        run: |
-          echo "$GPG_SIGNING_KEY_SONATYPE" | base64 --decode | gpg --batch --import
-          gpg --list-key
-        env:
-          GPG_SIGNING_KEY_SONATYPE: ${{ secrets.GPG_SIGNING_KEY_SONATYPE }}
       - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
@@ -108,15 +96,8 @@ jobs:
           key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
       - name: Publish to Sonatype
         env:
+          PGP_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.GPG_SIGNING_KEY_SONATYPE }}
           SONATYPE_USERNAME: travissdsc
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-        run: |
-          sudo rm -rf .git/index.lock
-          echo listing keys
-          export GPG_TTY=$(tty)
-          gpg --list-key
-          git config --global user.email "renku@datascience.ch"
-          git config --global user.name "Renku Bot"
-          git switch -c temp
-          git branch --set-upstream-to=origin/main
-          sbt 'release with-defaults'
+        run: sbt ci-release
