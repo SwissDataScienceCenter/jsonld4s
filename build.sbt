@@ -50,7 +50,6 @@ libraryDependencies += "org.scalatestplus" %% "scalacheck-1-14" % "3.2.2.0" % Te
 
 inThisBuild(
   List(
-    organization := "SwissDataScienceCenter",
     homepage := Some(url("https://www.datascience.ch")),
     licenses := List("Apache 2.0" -> new URL("http://www.apache.org/licenses/")),
     description := "Scala Circe extension for JSON-LD",
@@ -65,7 +64,6 @@ inThisBuild(
     ),
     versionScheme := Some("early-semver"),
     sonatypeProfileName := "io.renku",
-    publishMavenStyle := true,
     sonatypeCredentialHost := "s01.oss.sonatype.org",
     sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
   )
