@@ -63,6 +63,7 @@ inThisBuild(
         url = url("https://www.datascience.ch")
       )
     ),
+    versionScheme := Some("early-semver"),
     sonatypeProfileName := "io.renku",
     publishMavenStyle := true,
     sonatypeCredentialHost := "s01.oss.sonatype.org",
