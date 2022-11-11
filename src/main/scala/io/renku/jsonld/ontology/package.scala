@@ -18,6 +18,7 @@
 
 package io.renku.jsonld
 
+import cats.data.NonEmptyList
 import io.renku.jsonld.syntax._
 
 package object ontology {
@@ -30,8 +31,11 @@ package object ontology {
 
   def generateOntology(typeDef: Type, schema: Schema): JsonLD = generateOntology(typeDef, EntityId.of(schema))
 
-  def generateOntology(typeDef: Type, ontologyId: EntityId): JsonLD = JsonLD.arr(
+  def generateOntology(typeDef: Type, ontologyId: EntityId): JsonLD =
+    generateOntology(NonEmptyList.one(typeDef), ontologyId)
+
+  def generateOntology(typeDefs: NonEmptyList[Type], ontologyId: EntityId): JsonLD = JsonLD.arr(
     JsonLD.entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
-      typeDef.asJsonLD.asArray.getOrElse(Vector.empty).toList: _*
+      typeDefs.toList.flatMap(_.asJsonLD.asArray.getOrElse(Vector.empty)): _*
   )
 }

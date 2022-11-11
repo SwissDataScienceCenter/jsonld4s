@@ -19,6 +19,7 @@
 package io.renku.jsonld.ontology
 
 import DataPropertyRange._
+import cats.data.NonEmptyList
 import cats.syntax.all._
 import io.renku.jsonld.JsonLDDecoder._
 import io.renku.jsonld.JsonLDEncoder._
@@ -501,6 +502,44 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
               rdfs / "range"  -> List(DataPropertyRange(xsd / "string")).asJsonLD
             ) ::
           Nil: _*
+      )
+    }
+
+    "allow two unrelated types" in {
+      val root1 = Type.Def(
+        Class(schema / "Root1"),
+        ObjectProperties.empty,
+        DataProperties(DataProperty(schema / "name", xsd / "string"))
+      )
+      val root2 = Type.Def(
+        Class(schema / "Root2"),
+        ObjectProperties.empty,
+        DataProperties(DataProperty(schema / "description", xsd / "string"))
+      )
+
+      generateOntology(NonEmptyList.of(root1, root2), ontologyId) shouldBe JsonLD.arr(
+        List(
+          JsonLD
+            .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)),
+          JsonLD
+            .entity(root1.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]),
+          JsonLD
+            .entity(
+              schema / "name",
+              EntityTypes of owl / "DatatypeProperty",
+              rdfs / "domain" -> List(root1.clazz.id).asJsonLD,
+              rdfs / "range"  -> List(DataPropertyRange(xsd / "string")).asJsonLD
+            ),
+          JsonLD
+            .entity(root2.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]),
+          JsonLD
+            .entity(
+              schema / "description",
+              EntityTypes of owl / "DatatypeProperty",
+              rdfs / "domain" -> List(root2.clazz.id).asJsonLD,
+              rdfs / "range"  -> List(DataPropertyRange(xsd / "string")).asJsonLD
+            )
+        ): _*
       )
     }
   }
