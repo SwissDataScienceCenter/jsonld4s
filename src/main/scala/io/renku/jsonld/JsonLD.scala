@@ -146,8 +146,8 @@ object JsonLD {
   }
 
   private[jsonld] final case class JsonLDValue[V](
-      value:          V,
-      maybeType:      Option[EntityTypes] = None
+      value:     V,
+      maybeType: Option[EntityTypes] = None
   )(implicit encoder: Encoder[V])
       extends JsonLD {
 

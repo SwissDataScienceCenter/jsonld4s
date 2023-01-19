@@ -48,13 +48,13 @@ object JsonLDDecoder {
   final def entity[A](
       entityTypes: EntityTypes,
       predicate:   Cursor => JsonLDDecoder.Result[Boolean] = _ => Right(true)
-  )(f:             Cursor => Result[A]): JsonLDEntityDecoder[A] =
+  )(f: Cursor => Result[A]): JsonLDEntityDecoder[A] =
     new JsonLDEntityDecoder[A](entityTypes, predicate, CacheableEntityDecoder.no)(f)
 
   final def cacheableEntity[A](
       entityTypes: EntityTypes,
       predicate:   Cursor => JsonLDDecoder.Result[Boolean] = _ => Right(true)
-  )(f:             Cursor => Result[A]): JsonLDEntityDecoder[A] =
+  )(f: Cursor => Result[A]): JsonLDEntityDecoder[A] =
     new JsonLDEntityDecoder[A](entityTypes, predicate, CacheableEntityDecoder.yes)(f)
 
   implicit val decodeJsonLD: JsonLDDecoder[JsonLD] = _.jsonLD.asRight[DecodingFailure]
@@ -141,7 +141,7 @@ class JsonLDEntityDecoder[A](
     val entityTypes:                                          EntityTypes,
     val predicate:                                            Cursor => Result[Boolean],
     private[JsonLDEntityDecoder] val cacheableDecoderFactory: JsonLDEntityDecoder[A] => CacheableEntityDecoder[A]
-)(f:                                                          Cursor => Result[A])
+)(f: Cursor => Result[A])
     extends JsonLDDecoder[A] { self =>
 
   implicit lazy val cacheableDecoder: CacheableEntityDecoder[A] = cacheableDecoderFactory(this)
