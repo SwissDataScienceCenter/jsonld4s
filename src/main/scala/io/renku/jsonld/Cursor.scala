@@ -150,9 +150,9 @@ object Cursor {
   }
 
   private[jsonld] final case class FlattenedJsonCursor(
-      parent:               Cursor,
-      jsonLD:               JsonLD,
-      allEntities:          Map[EntityId, JsonLDEntity]
+      parent:      Cursor,
+      jsonLD:      JsonLD,
+      allEntities: Map[EntityId, JsonLDEntity]
   )(implicit decodingCache: DecodingCache)
       extends Cursor {
     override lazy val delete: Cursor         = Empty()
@@ -187,7 +187,7 @@ object Cursor {
   }
 
   private[jsonld] final case class DeletedPropertyCursor(parent: Cursor, property: Property)(implicit
-      decodingCache:                                             DecodingCache
+      decodingCache: DecodingCache
   ) extends Cursor {
     override lazy val jsonLD: JsonLD = JsonLD.JsonLDNull
     override lazy val delete: Cursor = this
@@ -199,7 +199,7 @@ object Cursor {
   }
 
   private[jsonld] final case class PropertyCursor(parent: Cursor, property: Property, jsonLD: JsonLD)(implicit
-      decodingCache:                                      DecodingCache
+      decodingCache: DecodingCache
   ) extends Cursor {
     override lazy val delete:   Cursor         = DeletedPropertyCursor(parent, property)
     override lazy val top:      Option[JsonLD] = parent.top
@@ -218,7 +218,7 @@ object Cursor {
   }
 
   private[jsonld] final case class ArrayCursor(parent: Cursor, jsonLD: JsonLDArray)(implicit
-      decodingCache:                                   DecodingCache
+      decodingCache: DecodingCache
   ) extends Cursor {
     override lazy val delete:   Cursor         = Empty()
     override lazy val top:      Option[JsonLD] = parent.top
@@ -228,7 +228,7 @@ object Cursor {
   private[jsonld] final case class FlattenedArrayCursor(parent:      Cursor,
                                                         jsonLD:      JsonLDArray,
                                                         allEntities: Map[EntityId, JsonLDEntity]
-  )(implicit decodingCache:                                          DecodingCache)
+  )(implicit decodingCache: DecodingCache)
       extends Cursor {
     override lazy val delete: Cursor         = Empty()
     override lazy val top:    Option[JsonLD] = parent.top
