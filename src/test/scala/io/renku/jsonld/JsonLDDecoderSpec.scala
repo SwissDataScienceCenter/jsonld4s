@@ -111,7 +111,7 @@ class JsonLDDecoderSpec
         .flatMap(_.cursor.as[Person](result))
         .fold(identity, p => fail(s"Expected decode to fail, but got: $p"))
 
-      decodingError.getMessage shouldBe "error!!"
+      decodingError.getMessage shouldBe "DecodingFailure at : error!!"
     }
   }
 
@@ -250,7 +250,7 @@ class JsonLDDecoderSpec
       val Left(decodingFailure) = ValuesContainer("container", List("")).asJsonLD.cursor.as(containerDecoder)
 
       decodingFailure              shouldBe a[DecodingFailure]
-      decodingFailure.getMessage() shouldBe failureMessage
+      decodingFailure.getMessage() shouldBe s"DecodingFailure at : $failureMessage"
     }
 
     "fail with a meaningful message when decoding a value when there's list of values fails " +
@@ -274,7 +274,7 @@ class JsonLDDecoderSpec
 
         decodingFailure shouldBe a[DecodingFailure]
         decodingFailure
-          .getMessage() shouldBe show"Cannot decode entity with container/container: ${DecodingFailure(failureMessage, Nil)}"
+          .getMessage() shouldBe show"DecodingFailure at : Cannot decode entity with container/container: ${DecodingFailure(failureMessage, Nil)}"
       }
 
     "decode entity with a single value property when encoded as a single value array" in {
