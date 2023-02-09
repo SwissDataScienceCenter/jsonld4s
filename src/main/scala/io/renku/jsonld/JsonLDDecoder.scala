@@ -147,6 +147,11 @@ class JsonLDEntityDecoder[A](
   implicit lazy val cacheableDecoder: CacheableEntityDecoder =
     if (useCache) CacheableEntityDecoder.Yes(this) else CacheableEntityDecoder.No
 
+  override def emap[B](fn: A => Either[String, B]): JsonLDEntityDecoder[B] =
+    new JsonLDEntityDecoder[B](entityTypes, predicate, useCache)(
+      f.andThen(_.flatMap(v => fn(v).left.map(DecodingFailure(_, Nil))))
+    )
+
   override def apply(cursor: Cursor): Result[A] = cursor match {
     case cur: FlattenedJsonCursor => tryDecode(cur) getOrElse cannotDecodeToEntityTypes(cur)
     case _ => goDownType(cursor)
