@@ -244,12 +244,12 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
     "reach the cache for JsonLDEntityDecoder" in new TestCase {
       val decoder =
         JsonLDDecoder.cacheableEntity[String](entityTypesObject.generateOne)(_ => nonEmptyStrings().generateOne.asRight)
-      val entity @ JsonLDEntity(id, _, _, _) = jsonLDEntities.generateOne
+      val entity = jsonLDEntities.generateOne
 
       val fromCache = nonEmptyStrings().generateOne.some
       (decodingCache
-        .get(_: EntityId)(_: CacheableEntityDecoder[String]))
-        .expects(id, decoder.cacheableDecoder)
+        .get[String](_: EntityId)(_: CacheableEntityDecoder))
+        .expects(entity.id, decoder.cacheableDecoder)
         .returning(fromCache)
 
       Cursor.TopCursor(entity).findInCache(decoder) shouldBe fromCache
@@ -272,7 +272,7 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
 
       val fromCache = nonEmptyStrings().generateOne.some
       (decodingCache
-        .get(_: EntityId)(_: CacheableEntityDecoder[String]))
+        .get[String](_: EntityId)(_: CacheableEntityDecoder))
         .expects(id, decoder.cacheableDecoder)
         .returning(fromCache)
 
@@ -281,9 +281,9 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
 
     "do not reach the cache for a non-JsonLDEntityDecoder" in new TestCase {
       val decoder = JsonLDDecoder.instance[String](_ => nonEmptyStrings().generateOne.asRight)
-      val entity @ JsonLDEntity(id, _, _, _) = jsonLDEntities.generateOne
+      val entity  = jsonLDEntities.generateOne
 
-      Cursor.TopCursor(entity).findInCache(id, decoder) shouldBe None
+      Cursor.TopCursor(entity).findInCache[String](entity.id, decoder) shouldBe None
     }
   }
 
@@ -296,7 +296,7 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
 
       val fromCache = nonEmptyStrings().generateOne.some
       (decodingCache
-        .get(_: EntityId)(_: CacheableEntityDecoder[String]))
+        .get[String](_: EntityId)(_: CacheableEntityDecoder))
         .expects(id, decoder.cacheableDecoder)
         .returning(fromCache)
 
@@ -314,7 +314,7 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
       val obj      = nonEmptyStrings().generateOne
 
       (decodingCache
-        .put[String](_: EntityId, _: String)(_: CacheableEntityDecoder[String]))
+        .put[String](_: EntityId, _: String)(_: CacheableEntityDecoder))
         .expects(entityId, obj, decoder.cacheableDecoder)
         .returning(obj)
 
@@ -341,7 +341,7 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
       val obj      = nonEmptyStrings().generateOne
 
       (decodingCache
-        .put[String](_: EntityId, _: String)(_: CacheableEntityDecoder[String]))
+        .put[String](_: EntityId, _: String)(_: CacheableEntityDecoder))
         .expects(entityId, obj, decoder.cacheableDecoder)
         .returning(obj)
 
@@ -359,7 +359,7 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
       val obj                                = nonEmptyStrings().generateOne
 
       (decodingCache
-        .put[String](_: EntityId, _: String)(_: CacheableEntityDecoder[String]))
+        .put[String](_: EntityId, _: String)(_: CacheableEntityDecoder))
         .expects(id, obj, decoder.cacheableDecoder)
         .returning(obj)
 
@@ -396,7 +396,7 @@ class CursorSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
       val obj                                = nonEmptyStrings().generateOne
 
       (decodingCache
-        .put[String](_: EntityId, _: String)(_: CacheableEntityDecoder[String]))
+        .put[String](_: EntityId, _: String)(_: CacheableEntityDecoder))
         .expects(id, obj, decoder.cacheableDecoder)
         .returning(obj)
 

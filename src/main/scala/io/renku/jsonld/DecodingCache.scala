@@ -19,8 +19,8 @@
 package io.renku.jsonld
 
 trait DecodingCache {
-  def get[A](entityId: EntityId)(implicit cacheableDecoder: CacheableEntityDecoder[A]): Option[A]
-  def put[A](entityId: EntityId, obj:                       A)(implicit cacheableDecoder: CacheableEntityDecoder[A]): A
+  def get[A](entityId: EntityId)(implicit cacheableDecoder: CacheableEntityDecoder): Option[A]
+  def put[A](entityId: EntityId, obj:                       A)(implicit cacheableDecoder: CacheableEntityDecoder): A
 }
 
 object DecodingCache {
@@ -31,23 +31,23 @@ object DecodingCache {
 
     import collection.mutable
 
-    private case class CacheKey(entityId: EntityId, decoder: CacheableEntityDecoder.Yes[_])
+    private case class CacheKey(entityId: EntityId, decoder: CacheableEntityDecoder.Yes)
 
     private val cache: mutable.Map[CacheKey, Any] = mutable.Map.empty[CacheKey, Any]
 
-    override def get[A](entityId: EntityId)(implicit cacheableDecoder: CacheableEntityDecoder[A]): Option[A] =
+    override def get[A](entityId: EntityId)(implicit cacheableDecoder: CacheableEntityDecoder): Option[A] =
       cacheableDecoder match {
-        case decoder: CacheableEntityDecoder.Yes[A] =>
+        case decoder: CacheableEntityDecoder.Yes =>
           cache.get(CacheKey(entityId, decoder)).map(_.asInstanceOf[A])
-        case _: CacheableEntityDecoder.No[A] => None
+        case _: CacheableEntityDecoder.No.type => None
       }
 
-    override def put[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder[A]): A =
+    override def put[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder): A =
       cacheableDecoder match {
-        case decoder: CacheableEntityDecoder.Yes[A] =>
+        case decoder: CacheableEntityDecoder.Yes =>
           cache.addOne(CacheKey(entityId, decoder) -> obj)
           obj
-        case _: CacheableEntityDecoder.No[A] => obj
+        case _: CacheableEntityDecoder.No.type => obj
       }
   }
 }

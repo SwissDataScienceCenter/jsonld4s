@@ -258,7 +258,7 @@ private[jsonld] sealed abstract class Caching(private[jsonld] val decodingCache:
       case _ => None
     }
 
-  def findInCache[A](implicit cacheableDecoder: CacheableEntityDecoder[A]): Option[A] =
+  def findInCache[A](implicit cacheableDecoder: CacheableEntityDecoder): Option[A] =
     findEntityId >>= decodingCache.get[A]
 
   def cache[A](entityId: EntityId, obj: A, decoder: JsonLDDecoder[A]): A = decoder match {
@@ -266,7 +266,7 @@ private[jsonld] sealed abstract class Caching(private[jsonld] val decodingCache:
     case _ => obj
   }
 
-  def cache[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder[A]): A =
+  def cache[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder): A =
     decodingCache.put(entityId, obj)
 
   def cache[A](json: JsonLD, obj: A, decoder: JsonLDDecoder[A]): A = json match {

@@ -49,13 +49,13 @@ object JsonLDDecoder {
       entityTypes: EntityTypes,
       predicate:   Cursor => JsonLDDecoder.Result[Boolean] = _ => Right(true)
   )(f: Cursor => Result[A]): JsonLDEntityDecoder[A] =
-    new JsonLDEntityDecoder[A](entityTypes, predicate, CacheableEntityDecoder.no)(f)
+    new JsonLDEntityDecoder[A](entityTypes, predicate, useCache = false)(f)
 
   final def cacheableEntity[A](
       entityTypes: EntityTypes,
       predicate:   Cursor => JsonLDDecoder.Result[Boolean] = _ => Right(true)
   )(f: Cursor => Result[A]): JsonLDEntityDecoder[A] =
-    new JsonLDEntityDecoder[A](entityTypes, predicate, CacheableEntityDecoder.yes)(f)
+    new JsonLDEntityDecoder[A](entityTypes, predicate, useCache = true)(f)
 
   implicit val decodeJsonLD: JsonLDDecoder[JsonLD] = _.jsonLD.asRight[DecodingFailure]
 
@@ -138,13 +138,14 @@ object JsonLDDecoder {
 }
 
 class JsonLDEntityDecoder[A](
-    val entityTypes:                                          EntityTypes,
-    val predicate:                                            Cursor => Result[Boolean],
-    private[JsonLDEntityDecoder] val cacheableDecoderFactory: JsonLDEntityDecoder[A] => CacheableEntityDecoder[A]
+    val entityTypes:                           EntityTypes,
+    val predicate:                             Cursor => Result[Boolean],
+    private[JsonLDEntityDecoder] val useCache: Boolean
 )(f: Cursor => Result[A])
     extends JsonLDDecoder[A] { self =>
 
-  implicit lazy val cacheableDecoder: CacheableEntityDecoder[A] = cacheableDecoderFactory(this)
+  implicit lazy val cacheableDecoder: CacheableEntityDecoder =
+    if (useCache) CacheableEntityDecoder.Yes(this) else CacheableEntityDecoder.No
 
   override def apply(cursor: Cursor): Result[A] = cursor match {
     case cur: FlattenedJsonCursor => tryDecode(cur) getOrElse cannotDecodeToEntityTypes(cur)
@@ -165,7 +166,7 @@ class JsonLDEntityDecoder[A](
   def widen[B >: A]: JsonLDEntityDecoder[B] = this.asInstanceOf[JsonLDEntityDecoder[B]]
 
   def orElse[B >: A](alternative: JsonLDEntityDecoder[B]): JsonLDEntityDecoder[B] =
-    new JsonLDEntityDecoder[B](entityTypes, predicate, alternative.cacheableDecoderFactory)(f) {
+    new JsonLDEntityDecoder[B](entityTypes, predicate, alternative.useCache)(f) {
 
       override def apply(cursor: Cursor): Result[B] = cursor match {
         case cur: FlattenedJsonCursor =>
@@ -186,7 +187,7 @@ class JsonLDEntityDecoder[A](
     }
 
   protected def tryDecode(cursor: FlattenedJsonCursor): Option[Result[A]] =
-    cursor.findInCache match {
+    cursor.findInCache[A] match {
       case Some(fromCache) => fromCache.asRight.some
       case _ =>
         cursor
@@ -204,15 +205,15 @@ class JsonLDEntityDecoder[A](
   }
 }
 
-private[jsonld] sealed trait CacheableEntityDecoder[A] extends Product with Serializable
+private[jsonld] sealed trait CacheableEntityDecoder extends Product with Serializable
 
 private[jsonld] object CacheableEntityDecoder {
 
-  def yes[A]: JsonLDEntityDecoder[A] => CacheableEntityDecoder.Yes[A] = Yes(_)
-  def no[A]:  JsonLDEntityDecoder[_] => CacheableEntityDecoder.No[A]  = _ => No[A]()
+  def yes: JsonLDEntityDecoder[_] => CacheableEntityDecoder.Yes     = Yes
+  def no:  JsonLDEntityDecoder[_] => CacheableEntityDecoder.No.type = _ => No
 
-  final case class Yes[A](decoder: JsonLDEntityDecoder[A]) extends CacheableEntityDecoder[A]
-  final case class No[A]()                                 extends CacheableEntityDecoder[A]
+  final case class Yes(decoder: JsonLDEntityDecoder[_]) extends CacheableEntityDecoder
+  final case object No                                  extends CacheableEntityDecoder
 }
 
 private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I]) extends JsonLDDecoder[List[I]] {

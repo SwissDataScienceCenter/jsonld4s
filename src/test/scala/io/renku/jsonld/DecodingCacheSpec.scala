@@ -33,7 +33,7 @@ class DecodingCacheSpec extends AnyWordSpec with should.Matchers with ScalaCheck
 
     "cache the value for a CacheableEntityDecoder" in new TestCase {
       forAll { (entityId: EntityId, obj: Int) =>
-        implicit val cacheableDecoder: CacheableEntityDecoder[Int] = newCacheableDecoder()
+        implicit val cacheableDecoder: CacheableEntityDecoder = newCacheableDecoder()
 
         cache.put(entityId, obj) shouldBe obj
 
@@ -43,7 +43,7 @@ class DecodingCacheSpec extends AnyWordSpec with should.Matchers with ScalaCheck
 
     "do not cache the value for a non-CacheableEntityDecoder" in new TestCase {
       forAll { (entityId: EntityId, obj: Int) =>
-        implicit val nonCacheableDecoder: CacheableEntityDecoder[Int] = newNonCacheableDecoder()
+        implicit val nonCacheableDecoder: CacheableEntityDecoder = newNonCacheableDecoder()
 
         cache.put(entityId, obj) shouldBe obj
 
@@ -55,13 +55,13 @@ class DecodingCacheSpec extends AnyWordSpec with should.Matchers with ScalaCheck
 
       val entityId = entityIds.generateOne
 
-      val cacheableDecoder1: CacheableEntityDecoder[Int] = newCacheableDecoder()
+      val cacheableDecoder1: CacheableEntityDecoder = newCacheableDecoder()
       val obj1 = Arbitrary.arbInt.arbitrary.generateOne
 
-      val cacheableDecoder2: CacheableEntityDecoder[Int] = newCacheableDecoder()
+      val cacheableDecoder2: CacheableEntityDecoder = newCacheableDecoder()
       val obj2 = Arbitrary.arbInt.arbitrary.generateOne
 
-      val nonCacheableDecoder: CacheableEntityDecoder[Int] = newNonCacheableDecoder()
+      val nonCacheableDecoder: CacheableEntityDecoder = newNonCacheableDecoder()
       val nonCachedObj = Arbitrary.arbInt.arbitrary.generateOne
 
       cache.put(entityId, obj1)(cacheableDecoder1)           shouldBe obj1
