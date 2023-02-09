@@ -115,6 +115,15 @@ class JsonLDDecoderSpec
     }
   }
 
+  "map" should {
+    "appy the given function" in {
+      forAll { value: String =>
+        val decoder = decodeString.map(_.length)
+        JsonLD.fromString(value).cursor.as[Int](decoder) shouldBe Right(value.length)
+      }
+    }
+  }
+
   "implicit decoders" should {
 
     val scenarios = Table(

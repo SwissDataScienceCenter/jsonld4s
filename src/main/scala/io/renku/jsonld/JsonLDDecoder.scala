@@ -35,6 +35,8 @@ trait JsonLDDecoder[A] extends (Cursor => Result[A]) with Serializable {
 
   def emap[B](f: A => Either[String, B]): JsonLDDecoder[B] =
     this(_).flatMap(f(_).leftMap(DecodingFailure(_, Nil)))
+
+  def map[B](f: A => B): JsonLDDecoder[B] = emap(f.andThen(Right(_)))
 }
 
 object JsonLDDecoder {
