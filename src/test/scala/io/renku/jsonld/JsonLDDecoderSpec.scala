@@ -59,6 +59,69 @@ class JsonLDDecoderSpec
         JsonLD.fromString(value).cursor.as[Int](decoder).leftMap(_.message) shouldBe Left(message)
       }
     }
+
+    case class Person(name: String)
+
+    "return a JsonLDEntityDecoder as result when called on JsonLDEntityDecoder" in {
+      val decoder: JsonLDEntityDecoder[Person] = JsonLDDecoder.entity(EntityTypes.of(schema / "Person")) { cursor =>
+        cursor.downField(schema / "name").as[String].map(Person)
+      }
+
+      val result = decoder.emap(p => Person(p.name.reverse).asRight)
+      result.getClass shouldBe decoder.getClass
+    }
+
+    "apply the function when called on JsonLDEntityDecoder" in {
+      forAll(Gen.alphaNumStr) { value: String =>
+        val decoder: JsonLDEntityDecoder[Person] = JsonLDDecoder.entity(EntityTypes.of(schema / "Person")) { cursor =>
+          cursor.downField(schema / "name").as[String].map(Person)
+        }
+
+        val result = decoder.emap(p => Person(p.name.reverse).asRight)
+
+        val decoded = parser
+          .parse(s"""{
+                    |  "@id" : "http://bla.org/persons/$value",
+                    |  "@type" : [ "http://io.renku/Person" ],
+                    |  "http://io.renku/name" : {
+                    |    "@value" : "$value"
+                    |  }
+                    |}""".stripMargin)
+          .flatMap(_.cursor.as[Person](result))
+          .fold(throw _, identity)
+
+        decoded shouldBe Person(value.reverse)
+      }
+    }
+
+    "fail if emap is returning a Left on JsonLDEntityDecoder" in {
+      val decoder: JsonLDEntityDecoder[Person] = JsonLDDecoder.entity(EntityTypes.of(schema / "Person")) { cursor =>
+        cursor.downField(schema / "name").as[String].map(Person)
+      }
+
+      val result: JsonLDEntityDecoder[Person] = decoder.emap(_ => Left("error!!"))
+      val decodingError = parser
+        .parse(s"""{
+                  |  "@id" : "http://bla.org/persons/$value",
+                  |  "@type" : [ "http://io.renku/Person" ],
+                  |  "http://io.renku/name" : {
+                  |    "@value" : "$value"
+                  |  }
+                  |}""".stripMargin)
+        .flatMap(_.cursor.as[Person](result))
+        .fold(identity, p => fail(s"Expected decode to fail, but got: $p"))
+
+      decodingError.getMessage shouldBe "error!!"
+    }
+  }
+
+  "map" should {
+    "appy the given function" in {
+      forAll { value: String =>
+        val decoder = decodeString.map(_.length)
+        JsonLD.fromString(value).cursor.as[Int](decoder) shouldBe Right(value.length)
+      }
+    }
   }
 
   "implicit decoders" should {
