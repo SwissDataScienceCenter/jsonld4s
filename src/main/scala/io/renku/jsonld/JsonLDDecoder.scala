@@ -18,6 +18,7 @@
 
 package io.renku.jsonld
 
+import cats.{Functor, Semigroupal}
 import cats.syntax.all._
 import cats.data.NonEmptyList
 import io.circe.{DecodingFailure, JsonNumber}
@@ -137,6 +138,21 @@ object JsonLDDecoder {
 
   implicit def decodeNonEmptyList[I](implicit dt: JsonLDDecoder[I]): JsonLDDecoder[NonEmptyList[I]] =
     decodeList[I].emap(list => NonEmptyList.fromList(list).toRight(s"Expected a non-empty list"))
+
+  implicit val jsonLDDecoderFunctor: Functor[JsonLDDecoder] =
+    new Functor[JsonLDDecoder] {
+      override def map[A, B](fa: JsonLDDecoder[A])(f: A => B): JsonLDDecoder[B] = fa.map(f)
+    }
+
+  implicit val jsonLDDecoderSemigroupal: Semigroupal[JsonLDDecoder] =
+    new Semigroupal[JsonLDDecoder] {
+      override def product[A, B](fa: JsonLDDecoder[A], fb: JsonLDDecoder[B]): JsonLDDecoder[(A, B)] =
+        cursor => {
+          val ra = fa(cursor)
+          val rb = fb(cursor)
+          ra.flatMap(a => rb.map(b => (a, b)))
+        }
+    }
 }
 
 class JsonLDEntityDecoder[A](

@@ -23,6 +23,7 @@ import cats.data.NonEmptyList
 import cats.syntax.all._
 import io.circe.DecodingFailure
 import io.renku.jsonld.Cursor.FlattenedJsonCursor
+import io.renku.jsonld.ExampleModel.{Course, Person}
 import io.renku.jsonld.JsonLD.JsonLDValue
 import io.renku.jsonld.generators.Generators.Implicits._
 import io.renku.jsonld.generators.Generators.{localDates, nonEmptyStrings, timestamps}
@@ -59,8 +60,6 @@ class JsonLDDecoderSpec
         JsonLD.fromString(value).cursor.as[Int](decoder).leftMap(_.message) shouldBe Left(message)
       }
     }
-
-    case class Person(name: String)
 
     "return a JsonLDEntityDecoder as result when called on JsonLDEntityDecoder" in {
       val decoder: JsonLDEntityDecoder[Person] = JsonLDDecoder.entity(EntityTypes.of(schema / "Person")) { cursor =>
@@ -116,11 +115,56 @@ class JsonLDDecoderSpec
   }
 
   "map" should {
-    "appy the given function" in {
+    "apply the given function" in {
       forAll { value: String =>
         val decoder = decodeString.map(_.length)
         JsonLD.fromString(value).cursor.as[Int](decoder) shouldBe Right(value.length)
       }
+    }
+  }
+
+  "mapN" should {
+    "apply both decoders" in {
+      val jsonLD =
+        s"""[{
+           |  "@id" : "http://bla.org/persons/Hank",
+           |  "@type" : [ "http://io.renku/Person" ],
+           |  "http://io.renku/name" : {
+           |    "@value" : "Hank"
+           |  }
+           |},
+           |{
+           |  "@id" : "http://bla.org/course/tt1",
+           |  "@type" : [ "http://io.renku/Course" ],
+           |  "http://io.renku/name" : {
+           |    "@value" : "TT-1"
+           |  },
+           |  "http://io.renku/seats" : {
+           |    "@value" : 25
+           |  }
+           |}
+           |]
+           |""".stripMargin
+
+      val personDecoder: JsonLDDecoder[Person] = JsonLDDecoder.entity(EntityTypes.of(schema / "Person")) { cursor =>
+        cursor.downField(schema / "name").as[String].map(Person)
+      }
+      val courseDecoder: JsonLDDecoder[Course] = JsonLDDecoder.entity(EntityTypes.of(schema / "Course")) { cursor =>
+        for {
+          name  <- cursor.downField(schema / "name").as[String]
+          seats <- cursor.downField(schema / "seats").as[Int]
+        } yield Course(name, seats)
+      }
+
+      val decoder = (decodeList(personDecoder), decodeList(courseDecoder)).mapN(Tuple2.apply)
+      val (person, course) =
+        parser
+          .parse(jsonLD)
+          .flatMap(_.cursor.as[(List[Person], List[Course])](decoder))
+          .fold(throw _, identity)
+
+      person.head shouldBe Person("Hank")
+      course.head shouldBe Course("TT-1", 25)
     }
   }
 
