@@ -70,4 +70,11 @@ object JsonLDEncoder {
   final implicit val encodeEntityId:  JsonLDEncoder[EntityId]  = JsonLD.fromEntityId
   final implicit val encodeJsonLD:    JsonLDEncoder[JsonLD]    = identity
   final implicit val encodeBoolean:   JsonLDEncoder[Boolean]   = (a: Boolean) => JsonLD.fromBoolean(a)
+
+  // The circe JsonNumber only allows to be created out of strings. The Json.fromBigDecimal
+  // returns a wrapper value, but in this case `asNumber` is always set.
+  final implicit val encodeBigDecimal: JsonLDEncoder[BigDecimal] = (n: BigDecimal) =>
+    JsonLD.fromNumber(
+      io.circe.Json.fromBigDecimal(n).asNumber.getOrElse(sys.error("BigDecimal is not a number"))
+    )
 }

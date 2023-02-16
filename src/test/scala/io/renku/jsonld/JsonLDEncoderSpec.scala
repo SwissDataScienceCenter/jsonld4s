@@ -22,6 +22,7 @@ import cats.syntax.all._
 import io.renku.jsonld.JsonLD.JsonLDEntityId
 import io.renku.jsonld.generators.Generators.Implicits._
 import io.renku.jsonld.generators.JsonLDGenerators._
+import org.scalacheck.Arbitrary
 import org.scalatest.matchers.should
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -87,6 +88,14 @@ class JsonLDEncoderSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
       val obj = Object(Random.nextString(5))
 
       otherEncoder(OtherObject(obj)) shouldBe JsonLD.fromEntityId(EntityId.of(obj.field))
+    }
+  }
+
+  "BigDecimal" should {
+    "encode as numeric value" in {
+      val obj        = Arbitrary.arbBigDecimal.arbitrary.generateOne
+      val jsonNumber = obj.asJsonLD.cursor.as[BigDecimal]
+      jsonNumber shouldBe Right(obj)
     }
   }
 
