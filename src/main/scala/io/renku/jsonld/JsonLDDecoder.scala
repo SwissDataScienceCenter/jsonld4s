@@ -81,6 +81,13 @@ object JsonLDDecoder {
     case json                  => DecodingFailure(s"Cannot decode ${ShowTypeName(json)} to Int", Nil).asLeft
   }
 
+  implicit val decodeBigDecimal: JsonLDDecoder[BigDecimal] = _.jsonLD match {
+    case JsonLDValue(value: JsonNumber, _) =>
+      value.toBigDecimal.map(_.asRight).getOrElse(DecodingFailure(s"Cannot decode $value to BigDecimal", Nil).asLeft)
+    case JsonLDValue(value, _) => DecodingFailure(s"Cannot decode $value to BigDecimal", Nil).asLeft
+    case json                  => DecodingFailure(s"Cannot decode ${ShowTypeName(json)} to BigDecimal", Nil).asLeft
+  }
+
   implicit val decodeBoolean: JsonLDDecoder[Boolean] = _.jsonLD match {
     case JsonLDValue(value: Boolean, _) => Right(value)
     case JsonLDValue(value, _)          => DecodingFailure(s"Cannot decode $value to Boolean", Nil).asLeft

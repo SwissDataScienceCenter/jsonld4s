@@ -133,7 +133,12 @@ class JsonLDDecoderSpec
       ("Int", decodeInt, arbInt.arbitrary.map(v => v -> JsonLD.fromInt(v)), JsonLD.fromString("a")),
       ("Boolean", decodeBoolean, arbBool.arbitrary.map(v => v -> JsonLD.fromBoolean(v)), JsonLD.fromString("a")),
       ("Instant", decodeInstant, timestamps.map(v => v -> JsonLD.fromInstant(v)), JsonLD.fromInt(1)),
-      ("LocalDate", decodeLocalDate, localDates.map(v => v -> JsonLD.fromLocalDate(v)), JsonLD.fromInt(1))
+      ("LocalDate", decodeLocalDate, localDates.map(v => v -> JsonLD.fromLocalDate(v)), JsonLD.fromInt(1)),
+      ("BigDecimal",
+       decodeBigDecimal,
+       arbBigDecimal.arbitrary.map(v => v -> JsonLD.fromNumber(io.circe.Json.fromBigDecimal(v).asNumber.get)),
+       JsonLD.fromString("a")
+      )
     )
 
     forAll(scenarios) {
