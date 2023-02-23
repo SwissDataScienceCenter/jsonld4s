@@ -39,4 +39,11 @@ object implicits {
     def sequence(implicit F: Traverse[F]): Either[A, F[B]] = F.sequence[Either[A, *], B](value)
   }
 
+  implicit class FlatMapOpsEitherCompat[A, B](val value: Either[A, B]) extends AnyVal {
+    def >>=[C](f: B => Either[A, C]): Either[A, C] = value match {
+      case Left(a)  => Left(a)
+      case Right(b) => f(b)
+    }
+  }
+
 }
