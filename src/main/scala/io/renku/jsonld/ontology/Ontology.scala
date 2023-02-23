@@ -20,15 +20,14 @@ package io.renku.jsonld.ontology
 
 import cats.Show
 import cats.data.NonEmptyList
-import cats.evidence.{<~<, ===}
 import cats.kernel.Semigroup
 import cats.syntax.all._
 import io.renku.jsonld.JsonLDEncoder._
 import io.renku.jsonld._
+import io.renku.jsonld.compat.implicits._
 import io.renku.jsonld.ontology.DataProperty.TopDataProperty
 import io.renku.jsonld.ontology.ObjectProperty.TopObjectProperty
 import io.renku.jsonld.syntax._
-import io.renku.jsonld.compat.implicits._
 
 final case class Type(clazz:             Class,
                       objectProperties:  List[ObjectProperty],
