@@ -2,7 +2,9 @@ package io.renku.jsonld.compat
 
 import scala.collection.mutable
 import scala.collection.immutable
-import cats.{Alternative, Eval, Foldable}
+import cats.{Alternative, Eval, Foldable, Traverse}
+
+import scala.language.higherKinds
 
 object implicits {
 
@@ -31,6 +33,10 @@ object implicits {
       }
       m.toMap
     }
+  }
+
+  implicit class TraverseOpsEitherCompat[F[_], A, B](val value: F[Either[A, B]]) extends AnyVal {
+    def sequence(implicit F: Traverse[F]): Either[A, F[B]] = F.sequence[Either[A, *], B](value)
   }
 
 }

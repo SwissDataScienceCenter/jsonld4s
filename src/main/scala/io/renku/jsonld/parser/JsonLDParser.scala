@@ -22,7 +22,7 @@ import cats.syntax.all._
 import io.circe.{Json, JsonNumber, JsonObject}
 import io.renku.jsonld.JsonLD.{JsonLDInstantValue, JsonLDLocalDateValue, JsonLDValue}
 import io.renku.jsonld._
-
+import io.renku.jsonld.compat.implicits._
 import java.time.{Instant, LocalDate, OffsetDateTime}
 import scala.util.Try
 
@@ -36,7 +36,7 @@ private class JsonLDParser() extends Parser {
     jsonBoolean = JsonLD.fromBoolean(_).asRight[ParsingFailure],
     jsonNumber = JsonLD.fromNumber(_).asRight[ParsingFailure],
     jsonString = JsonLD.fromString(_).asRight[ParsingFailure],
-    jsonArray = _.map(parse).toList.sequence[Either[ParsingFailure, *], JsonLD]
+    jsonArray = _.map(parse).toList.sequence
       .map(JsonLD.arr(_: _*))
       .flatMap(_.merge.leftMap(err => ParsingFailure(err.getMessage, err))),
     jsonObject = parseObject
@@ -73,7 +73,7 @@ private class JsonLDParser() extends Parser {
         .filterKeys(key => key != "@id" && key != "@type" && key != "@reverse")
         .toList
         .map(toPropsAndValues)
-        .sequence[Either[ParsingFailure, *], (Property, JsonLD)]
+        .sequence
 
     private lazy val toPropsAndValues: ((String, Json)) => Either[ParsingFailure, (Property, JsonLD)] = {
       case (prop, value) if value.isObject =>
@@ -84,8 +84,8 @@ private class JsonLDParser() extends Parser {
         val failure = ParsingFailure(s"Malformed entity's $prop array property value")
         for {
           jsons       <- value.asArray.map(_.asRight[ParsingFailure]).getOrElse(failure.asLeft[Vector[Json]])
-          jsonObjects <- jsons.map(_.asObject.map(_.asRight).getOrElse(failure.asLeft[JsonObject])).sequence[Either[ParsingFailure, *], JsonObject]
-          propValues  <- jsonObjects.map(parseObject).sequence[Either[ParsingFailure, *], JsonLD]
+          jsonObjects <- jsons.map(_.asObject.map(_.asRight).getOrElse(failure.asLeft[JsonObject])).sequence
+          propValues  <- jsonObjects.map(parseObject).sequence
         } yield Property(prop) -> JsonLD.arr(propValues: _*)
       case (prop, _) => ParsingFailure(s"Malformed entity's $prop property value").asLeft[(Property, JsonLD)]
     }
@@ -106,7 +106,7 @@ private class JsonLDParser() extends Parser {
         case props =>
           props
             .map(toPropAndJsonLD)
-            .sequence[Either[ParsingFailure, *], (Property, JsonLD)]
+            .sequence
             .map(Reverse.fromList)
             .flatMap(_.fold(error => ParsingFailure(error.getMessage).asLeft[Reverse], _.asRight[ParsingFailure]))
       }
@@ -142,7 +142,7 @@ private class JsonLDParser() extends Parser {
       targets <- propsWithoutId.head._2 match {
                    case target if target.isObject => extractId(id)(target).map(List(_))
                    case target if target.isArray =>
-                     target.asArray.sequence.flatten.map(extractId(id)).toList.sequence[Either[ParsingFailure, *], EntityId]
+                     target.asArray.sequence.flatten.map(extractId(id)).toList.sequence
                    case _ => ParsingFailure(s"Edge $id has invalid target(s)").asLeft
                  }
     } yield targets match {
@@ -183,7 +183,7 @@ private class JsonLDParser() extends Parser {
 
     for {
       value       <- parse(value)
-      maybeTypes  <- maybeTypes.map(_.as[EntityTypes].leftMap(e => ParsingFailure(e.message, e))).sequence[Either[ParsingFailure, *], EntityTypes]
+      maybeTypes  <- maybeTypes.map(_.as[EntityTypes].leftMap(e => ParsingFailure(e.message, e))).sequence
       jsonLDValue <- valueToJsonLDValue(maybeTypes)(value)
     } yield jsonLDValue
   }
