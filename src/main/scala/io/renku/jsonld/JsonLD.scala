@@ -22,9 +22,9 @@ import cats.syntax.all._
 import io.circe.{Encoder, Json, JsonNumber}
 import io.renku.jsonld.flatten.{JsonLDArrayFlatten, JsonLDEntityFlatten, JsonLDFlatten}
 import io.renku.jsonld.merge.{EntitiesMerger, JsonLDMerge}
-
 import java.io.Serializable
 import java.time.{Instant, LocalDate}
+import io.renku.jsonld.compat.implicits._
 
 abstract class JsonLD extends JsonLDMerge with JsonLDFlatten with Product with Serializable {
 

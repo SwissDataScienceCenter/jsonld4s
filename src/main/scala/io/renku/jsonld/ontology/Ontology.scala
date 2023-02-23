@@ -20,6 +20,7 @@ package io.renku.jsonld.ontology
 
 import cats.Show
 import cats.data.NonEmptyList
+import cats.evidence.{<~<, ===}
 import cats.kernel.Semigroup
 import cats.syntax.all._
 import io.renku.jsonld.JsonLDEncoder._
@@ -27,6 +28,7 @@ import io.renku.jsonld._
 import io.renku.jsonld.ontology.DataProperty.TopDataProperty
 import io.renku.jsonld.ontology.ObjectProperty.TopObjectProperty
 import io.renku.jsonld.syntax._
+import io.renku.jsonld.compat.implicits._
 
 final case class Type(clazz:             Class,
                       objectProperties:  List[ObjectProperty],
@@ -200,16 +202,16 @@ object ObjectProperty {
 
   implicit lazy val encoder: JsonLDEncoder[ObjectProperty] = JsonLDEncoder.instance {
     case ObjectProperty(id, range, domain, maybeTopProperty, maybeComment) =>
-      JsonLD.entity(
-        id,
-        EntityTypes of owl / "ObjectProperty",
-        Seq(
-          Some(rdfs / "domain" -> domain.asJsonLD),
-          Some(rdfs / "range"  -> range.asJsonLD),
-          maybeTopProperty.map(p => rdfs / "subPropertyOf" -> p.asJsonLD),
-          maybeComment.map(c => rdfs / "comment" -> c.asJsonLD)
-        ).flatten.toMap
-      )
+        JsonLD.entity(
+          id,
+          EntityTypes of owl / "ObjectProperty",
+          Seq(
+            Some(rdfs / "domain" -> domain.asJsonLD),
+            Some(rdfs / "range"  -> range.asJsonLD),
+            maybeTopProperty.map(p => rdfs / "subPropertyOf" -> p.encoder(p)),
+            maybeComment.map(c => rdfs / "comment" -> c.asJsonLD)
+          ).flatten.toMap
+        )
   }
 }
 
@@ -296,7 +298,7 @@ object DataProperty {
           Seq(
             Some(rdfs / "domain" -> domain.asJsonLD),
             Some(rdfs / "range"  -> range.asJsonLD),
-            maybeTopProperty.map(p => rdfs / "subPropertyOf" -> p.asJsonLD),
+            maybeTopProperty.map(p => rdfs / "subPropertyOf" -> p.encoder(p)),
             maybeComment.map(c => rdfs / "comment" -> c.asJsonLD)
           ).flatten.toMap
         )

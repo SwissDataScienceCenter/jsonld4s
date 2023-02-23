@@ -20,6 +20,7 @@ package io.renku.jsonld
 
 import cats.data.NonEmptyList
 import cats.syntax.all._
+import io.circe.Json
 import io.circe.literal._
 import io.renku.jsonld.JsonLD.JsonLDEntity
 import io.renku.jsonld.generators.Generators.Implicits._
@@ -113,9 +114,9 @@ class DefaultGraphSpec extends AnyWordSpec with should.Matchers with ScalaCheckP
 
     "turn the given DefaultGraph into JSON" in {
       forAll { (graph: DefaultGraph) =>
-        graph.toJson shouldBe json"""{
-          "@graph": ${graph.entities.map(_.toJson)}
-        }"""
+        graph.toJson shouldBe Json.obj(
+          "@graph" -> Json.fromValues(graph.entities.map(_.toJson))
+        )
       }
     }
   }

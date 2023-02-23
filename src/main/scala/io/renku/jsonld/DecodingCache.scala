@@ -45,7 +45,7 @@ object DecodingCache {
     override def put[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder): A =
       cacheableDecoder match {
         case decoder: CacheableEntityDecoder.Yes =>
-          cache.addOne(CacheKey(entityId, decoder) -> obj)
+          cache += (CacheKey(entityId, decoder) -> obj)
           obj
         case _: CacheableEntityDecoder.No.type => obj
       }

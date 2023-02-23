@@ -59,6 +59,6 @@ private[jsonld] trait EntitiesMerger {
   private def updateProperty(targetEntityId: JsonLDEntityId[EntityId]): JsonLD => JsonLD = propertyValue =>
     propertyValue.asArray.fold(JsonLD.arr(targetEntityId)) { jsonLDArr =>
       if (jsonLDArr contains targetEntityId) JsonLD.arr(jsonLDArr: _*)
-      else JsonLD.arr(jsonLDArr.appended(targetEntityId):          _*)
+      else JsonLD.arr(jsonLDArr :+ targetEntityId:          _*)
     }
 }

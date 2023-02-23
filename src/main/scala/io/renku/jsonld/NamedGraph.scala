@@ -39,10 +39,11 @@ final case class NamedGraph(id: EntityId, entities: Seq[JsonLDEntityLike])
   import io.circe.Json
   import io.circe.literal._
 
-  override lazy val toJson: Json = json"""{
-    "@id":    ${id.asJson},
-    "@graph": ${entities.map(_.toJson)}
-  }"""
+  override lazy val toJson: Json =
+    Json.obj(
+      "@id"     -> id.asJson,
+      "@graph"  -> Json.fromValues(entities.map(_.toJson)),
+    )
 
   override lazy val entityId: Option[EntityId] = Some(id)
 
@@ -74,9 +75,10 @@ final case class DefaultGraph(entities: Seq[JsonLDEntityLike])
   import io.circe.Json
   import io.circe.literal._
 
-  override lazy val toJson: Json = json"""{
-    "@graph": ${entities.map(_.toJson)}
-  }"""
+  override lazy val toJson: Json =
+    Json.obj(
+      "@graph" -> Json.fromValues(entities.map(_.toJson)),
+    )
 
   override lazy val entityId: Option[EntityId] = None
 

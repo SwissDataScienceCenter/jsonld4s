@@ -50,7 +50,7 @@ trait GraphFlatten extends EntitiesMerger {
 
   private def flattenEntities: Either[MalformedJsonLD, List[JsonLDEntityLike]] =
     entities.foldLeft(Either.right[MalformedJsonLD, List[JsonLDEntityLike]](List.empty[JsonLDEntityLike])) {
-      case (flattened, entity: JsonLDEntity) => flattened >>= (deNestEntities(List(entity), _))
+      case (flattened, entity: JsonLDEntity) => flattened flatMap (deNestEntities(List(entity), _))
       case (flattened, edge: JsonLDEdge)     => flattened.map(_ ::: edge :: Nil)
     }
 }

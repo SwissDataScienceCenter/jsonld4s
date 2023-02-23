@@ -20,6 +20,7 @@ package io.renku.jsonld
 
 import cats.data.NonEmptyList
 import cats.syntax.all._
+import io.circe.Json
 import io.circe.literal._
 import io.renku.jsonld.JsonLD.JsonLDEntity
 import io.renku.jsonld.generators.Generators.Implicits._
@@ -127,10 +128,10 @@ class NamedGraphSpec extends AnyWordSpec with should.Matchers with ScalaCheckPro
 
     "turn the given NamedGraph into JSON" in {
       forAll { (graph: NamedGraph) =>
-        graph.toJson shouldBe json"""{
-          "@id":    ${graph.id},
-          "@graph": ${graph.entities.map(_.toJson)}
-        }"""
+        graph.toJson shouldBe Json.obj(
+          "@id"   -> graph.id.asJson,
+          "@graph" -> Json.fromValues(graph.entities.map(_.toJson))
+        )
       }
     }
   }

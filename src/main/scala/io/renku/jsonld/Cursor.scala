@@ -193,7 +193,7 @@ object Cursor {
     override lazy val delete: Cursor = this
     override lazy val top: Option[JsonLD] = parent.jsonLD match {
       case json @ JsonLDEntity(_, _, properties, _) =>
-        Some(json.copy(properties = properties.removed(property)))
+        Some(json.copy(properties = properties - property))
     }
     override lazy val focusTop: Cursor = top.map(TopCursor(_)).getOrElse(this)
   }

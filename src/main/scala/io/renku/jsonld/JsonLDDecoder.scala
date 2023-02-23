@@ -246,7 +246,7 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
         case itemDecoder: JsonLDEntityDecoder[I] =>
           for {
             ids            <- array.cursor.as[List[EntityId]]
-            entityOrCached <- (ids map fromCacheOrFromAllEntities(cursor)).sequence
+            entityOrCached <- (ids map fromCacheOrFromAllEntities(cursor)).sequence[Either[DecodingFailure, *], Either[JsonLDEntity, I]]
             filtered       <- entityOrCached.map(entitiesFor(itemDecoder)).collect(matchingEntities).asRight
             decoded        <- filtered.map(decode(cursor.downTo)).sequence
           } yield decoded
@@ -287,7 +287,7 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
       val cursor = cursorFactory(entity)
       itemDecoder(cursor)
         .leftMap(failure => DecodingFailure(show"Cannot decode entity with $id: $failure", Nil))
-        .flatTap(cursor.cache(entity, _, itemDecoder).asRight)
+        .flatMap(i => cursor.cache(entity, i, itemDecoder).asRight[DecodingFailure].map(_ => i))
   }
 
   private def decodeIfFlattenedCursor(cursor: FlattenedJsonCursor): Result[List[I]] = cursor.jsonLD match {

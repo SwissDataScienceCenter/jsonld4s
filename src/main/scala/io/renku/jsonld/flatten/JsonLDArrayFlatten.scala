@@ -30,9 +30,9 @@ trait JsonLDArrayFlatten extends JsonLDFlatten {
   override lazy val flatten: Either[MalformedJsonLD, JsonLD] = for {
     flattened <- jsons.foldLeft(Either.right[MalformedJsonLD, List[JsonLD]](List.empty[JsonLD])) {
                    case (flattened, jsonLDEntity: JsonLDEntity) =>
-                     flattened >>= (deNest(List(jsonLDEntity), _))
+                     flattened flatMap (deNest(List(jsonLDEntity), _))
                    case (flattened, JsonLDArray(jsons)) =>
-                     flattened >>= (deNest(jsons.toList, _))
+                     flattened flatMap (deNest(jsons.toList, _))
                    case (flattened, other) => flattened.map(_ ::: other :: Nil)
                  }
     validated <- checkForUniqueIds(flattened.distinct)

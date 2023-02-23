@@ -171,7 +171,7 @@ class JsonLDFlattenSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
        */
 
       def replaceEntityProperty(properties: Map[Property, JsonLD], property: Property, entity: JsonLDEntity) =
-        properties.removed(property) + (property -> JsonLDEntityId(entity.id))
+        properties - property + (property -> JsonLDEntityId(entity.id))
 
       forAll {
         (entity0:  JsonLDEntity,
