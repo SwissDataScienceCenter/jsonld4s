@@ -24,7 +24,7 @@ import io.circe.{DecodingFailure, JsonNumber}
 import io.renku.jsonld.Cursor._
 import io.renku.jsonld.JsonLD._
 import io.renku.jsonld.JsonLDDecoder.Result
-
+import io.renku.jsonld.compat.implicits._
 import java.time.{Instant, LocalDate, OffsetDateTime}
 
 /** A type class that provides a conversion from a [[Cursor]] to an object of type `A`
@@ -246,7 +246,7 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
         case itemDecoder: JsonLDEntityDecoder[I] =>
           for {
             ids            <- array.cursor.as[List[EntityId]]
-            entityOrCached <- (ids map fromCacheOrFromAllEntities(cursor)).sequence[Either[DecodingFailure, *], Either[JsonLDEntity, I]]
+            entityOrCached <- (ids map fromCacheOrFromAllEntities(cursor)).sequence
             filtered       <- entityOrCached.map(entitiesFor(itemDecoder)).collect(matchingEntities).asRight
             decoded        <- filtered.map(decode(cursor.downTo)).sequence
           } yield decoded
