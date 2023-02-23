@@ -285,9 +285,9 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
     case Right(cached) => cached.asRight[DecodingFailure]
     case Left(entity @ JsonLDEntity(id, _, _, _)) =>
       val cursor = cursorFactory(entity)
-      itemDecoder(cursor)
-        .leftMap(failure => DecodingFailure(show"Cannot decode entity with $id: $failure", Nil))
-        .flatMap(i => cursor.cache(entity, i, itemDecoder).asRight[DecodingFailure].map(_ => i))
+      (itemDecoder(cursor)
+        .leftMap(failure => DecodingFailure(show"Cannot decode entity with $id: $failure", Nil)): Result[I])
+        .flatTap(cursor.cache(entity, _, itemDecoder).asRight[DecodingFailure])
   }
 
   private def decodeIfFlattenedCursor(cursor: FlattenedJsonCursor): Result[List[I]] = cursor.jsonLD match {
