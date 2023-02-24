@@ -129,7 +129,7 @@ class NamedGraphSpec extends AnyWordSpec with should.Matchers with ScalaCheckPro
     "turn the given NamedGraph into JSON" in {
       forAll { (graph: NamedGraph) =>
         graph.toJson shouldBe Json.obj(
-          "@id"   -> graph.id.asJson,
+          "@id"    -> graph.id.asJson,
           "@graph" -> Json.fromValues(graph.entities.map(_.toJson))
         )
       }

@@ -32,8 +32,8 @@ object implicits {
         Foldable.iterateRight(fa, lb)(f)
       override def pure[A](x: A): Seq[A] = Seq(x)
       override def empty[A]: Seq[A] = Seq.empty
-      override def combineK[A](x: Seq[A], y: Seq[A]): Seq[A] = x ++ y
-      override def ap[A, B](ff: Seq[A => B])(fa: Seq[A]): Seq[B] = ff.flatMap(f => fa.map(f))
+      override def combineK[A](x: Seq[A], y:       Seq[A]): Seq[A] = x ++ y
+      override def ap[A, B](ff:   Seq[A => B])(fa: Seq[A]): Seq[B] = ff.flatMap(f => fa.map(f))
     }
 
   implicit class IterableOpsCompat[A](val iterable: Iterable[A]) extends AnyVal {
@@ -44,7 +44,7 @@ object implicits {
         val v =
           m.get(k) match {
             case Some(b) => reduce(b, f(elem))
-            case None => f(elem)
+            case None    => f(elem)
           }
         m.put(k, v)
       }

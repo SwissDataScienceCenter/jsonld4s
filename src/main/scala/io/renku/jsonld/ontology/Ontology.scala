@@ -201,16 +201,16 @@ object ObjectProperty {
 
   implicit lazy val encoder: JsonLDEncoder[ObjectProperty] = JsonLDEncoder.instance {
     case ObjectProperty(id, range, domain, maybeTopProperty, maybeComment) =>
-        JsonLD.entity(
-          id,
-          EntityTypes of owl / "ObjectProperty",
-          Seq(
-            Some(rdfs / "domain" -> domain.asJsonLD),
-            Some(rdfs / "range"  -> range.asJsonLD),
-            maybeTopProperty.map(p => rdfs / "subPropertyOf" -> p.encoder(p)),
-            maybeComment.map(c => rdfs / "comment" -> c.asJsonLD)
-          ).flatten.toMap
-        )
+      JsonLD.entity(
+        id,
+        EntityTypes of owl / "ObjectProperty",
+        Seq(
+          Some(rdfs / "domain" -> domain.asJsonLD),
+          Some(rdfs / "range"  -> range.asJsonLD),
+          maybeTopProperty.map(p => rdfs / "subPropertyOf" -> p.encoder(p)),
+          maybeComment.map(c => rdfs / "comment" -> c.asJsonLD)
+        ).flatten.toMap
+      )
   }
 }
 

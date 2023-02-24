@@ -41,8 +41,8 @@ final case class NamedGraph(id: EntityId, entities: Seq[JsonLDEntityLike])
 
   override lazy val toJson: Json =
     Json.obj(
-      "@id"     -> id.asJson,
-      "@graph"  -> Json.fromValues(entities.map(_.toJson)),
+      "@id"    -> id.asJson,
+      "@graph" -> Json.fromValues(entities.map(_.toJson))
     )
 
   override lazy val entityId: Option[EntityId] = Some(id)
@@ -77,7 +77,7 @@ final case class DefaultGraph(entities: Seq[JsonLDEntityLike])
 
   override lazy val toJson: Json =
     Json.obj(
-      "@graph" -> Json.fromValues(entities.map(_.toJson)),
+      "@graph" -> Json.fromValues(entities.map(_.toJson))
     )
 
   override lazy val entityId: Option[EntityId] = None
