@@ -1,7 +1,6 @@
 package io.renku.jsonld.compat
 
-import scala.collection.mutable
-import scala.collection.immutable
+import scala.collection.{IterableView, immutable, mutable}
 import cats.{Alternative, Eval, Foldable, Traverse}
 
 import scala.language.higherKinds
@@ -44,6 +43,10 @@ object implicits {
       case Left(a)  => Left(a)
       case Right(b) => f(b)
     }
+  }
+
+  implicit class IterableViewOpsCompat[K, V](val value: IterableView[(K, V), Map[K, V]]) extends AnyVal {
+    def filterKeys(p: K => Boolean): Map[K, V] = value.filter { case (k, _) => p(k) }.toMap
   }
 
 }

@@ -69,7 +69,7 @@ private class JsonLDParser() extends Parser {
     } yield JsonLD.JsonLDEntity(id, types, properties.toMap, reverse)
 
     private def extractProperties(jsonObject: JsonObject) =
-      jsonObject.toMap
+      jsonObject.toMap.view
         .filterKeys(key => key != "@id" && key != "@type" && key != "@reverse")
         .toList
         .map(toPropsAndValues)
@@ -99,7 +99,7 @@ private class JsonLDParser() extends Parser {
     }
 
     private def parseReverseObject(jsonObject: JsonObject): Either[ParsingFailure, Reverse] =
-      jsonObject.toMap
+      jsonObject.toMap.view
         .filterKeys(notReserved)
         .toList match {
         case Nil => ParsingFailure("Malformed entity's @reverse property - no properties defined").asLeft[Reverse]
@@ -127,7 +127,7 @@ private class JsonLDParser() extends Parser {
       .bimap(ParsingFailure(s"Could not parse @id: $entityId", _), identity)
 
   private def toJsonLDEdge(entityId: Json, props: Map[String, Json]): Either[ParsingFailure, JsonLD] = {
-    val propsWithoutId = props.filterKeys(_ != "@id")
+    val propsWithoutId = props.view.filterKeys(_ != "@id")
 
     def extractId(id: EntityId)(json: Json) = json.asObject
       .flatMap(_.toMap.get("@id"))
