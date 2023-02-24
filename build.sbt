@@ -94,3 +94,6 @@ headerLicense := Some(
         |limitations under the License.""".stripMargin
   )
 )
+
+addCommandAlias("testAll", "+ test")
+
