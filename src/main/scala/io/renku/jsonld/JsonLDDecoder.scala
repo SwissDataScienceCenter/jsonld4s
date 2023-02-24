@@ -24,7 +24,7 @@ import io.circe.{DecodingFailure, JsonNumber}
 import io.renku.jsonld.Cursor._
 import io.renku.jsonld.JsonLD._
 import io.renku.jsonld.JsonLDDecoder.Result
-
+import io.renku.jsonld.compat.implicits._
 import java.time.{Instant, LocalDate, OffsetDateTime}
 
 /** A type class that provides a conversion from a [[Cursor]] to an object of type `A`
@@ -285,9 +285,9 @@ private[jsonld] class JsonLDListDecoder[I](implicit itemDecoder: JsonLDDecoder[I
     case Right(cached) => cached.asRight[DecodingFailure]
     case Left(entity @ JsonLDEntity(id, _, _, _)) =>
       val cursor = cursorFactory(entity)
-      itemDecoder(cursor)
-        .leftMap(failure => DecodingFailure(show"Cannot decode entity with $id: $failure", Nil))
-        .flatTap(cursor.cache(entity, _, itemDecoder).asRight)
+      (itemDecoder(cursor)
+        .leftMap(failure => DecodingFailure(show"Cannot decode entity with $id: $failure", Nil)): Result[I])
+        .flatTap(cursor.cache(entity, _, itemDecoder).asRight[DecodingFailure])
   }
 
   private def decodeIfFlattenedCursor(cursor: FlattenedJsonCursor): Result[List[I]] = cursor.jsonLD match {

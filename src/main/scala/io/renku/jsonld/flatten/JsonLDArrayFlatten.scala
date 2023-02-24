@@ -21,6 +21,7 @@ package io.renku.jsonld.flatten
 import io.renku.jsonld.JsonLD
 import io.renku.jsonld.JsonLD.{JsonLDArray, JsonLDEntity, MalformedJsonLD}
 import cats.syntax.all._
+import io.renku.jsonld.compat.implicits._
 
 trait JsonLDArrayFlatten extends JsonLDFlatten {
   self: JsonLDArray =>

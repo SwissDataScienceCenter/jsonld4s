@@ -33,7 +33,7 @@ jobs:
             ~/.sbt
           key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
       - name: Unit test
-        run: sbt -Dsbt.color=always -Dsbt.supershell=false clean test
+        run: sbt -Dsbt.color=always -Dsbt.supershell=false clean +test
   examples:
     name: Run Examples
     runs-on: ubuntu-latest
@@ -53,7 +53,7 @@ jobs:
             ~/.sbt
           key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
       - name: Run Examples
-        run: sbt -Dsbt.color=always -Dsbt.supershell=false clean "Examples / test"
+        run: sbt -Dsbt.color=always -Dsbt.supershell=false clean +"Examples / test"
   formatter:
     name: Formatter
     runs-on: ubuntu-latest
@@ -73,7 +73,7 @@ jobs:
             ~/.sbt
           key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt') }}
       - name: Formatter
-        run: sbt scalafmtCheck
+        run: sbt +scalafmtCheck
   publish:
     name: Publish
     runs-on: ubuntu-20.04 

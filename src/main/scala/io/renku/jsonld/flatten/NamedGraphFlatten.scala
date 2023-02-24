@@ -22,6 +22,7 @@ import cats.syntax.all._
 import io.renku.jsonld.JsonLD._
 import io.renku.jsonld.merge.EntitiesMerger
 import io.renku.jsonld.{DefaultGraph, Graph, NamedGraph}
+import io.renku.jsonld.compat.implicits._
 
 trait NamedGraphFlatten extends JsonLDFlatten with GraphFlatten {
   self: NamedGraph =>

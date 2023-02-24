@@ -24,6 +24,7 @@ lazy val root = Project(
   .settings(
     organization := "io.renku",
     name := "jsonld4s",
+    crossScalaVersions := Seq("2.13.10", "2.12.12"),
     scalaVersion := "2.13.10",
     inConfig(Examples)(Defaults.testSettings)
   )
@@ -54,6 +55,7 @@ inThisBuild(
     licenses := List("Apache 2.0" -> new URL("http://www.apache.org/licenses/")),
     description := "Scala Circe extension for JSON-LD",
     homepage := Some(url("https://github.com/SwissDataScienceCenter/jsonld4s")),
+    addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
     developers := List(
       Developer(
         id = "SwissDataScienceCenter",
@@ -92,3 +94,6 @@ headerLicense := Some(
         |limitations under the License.""".stripMargin
   )
 )
+
+addCommandAlias("testAll", "+ test")
+

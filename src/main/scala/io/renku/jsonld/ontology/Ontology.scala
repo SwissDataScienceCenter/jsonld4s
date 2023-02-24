@@ -24,6 +24,7 @@ import cats.kernel.Semigroup
 import cats.syntax.all._
 import io.renku.jsonld.JsonLDEncoder._
 import io.renku.jsonld._
+import io.renku.jsonld.compat.implicits._
 import io.renku.jsonld.ontology.DataProperty.TopDataProperty
 import io.renku.jsonld.ontology.ObjectProperty.TopObjectProperty
 import io.renku.jsonld.syntax._
@@ -206,7 +207,7 @@ object ObjectProperty {
         Seq(
           Some(rdfs / "domain" -> domain.asJsonLD),
           Some(rdfs / "range"  -> range.asJsonLD),
-          maybeTopProperty.map(p => rdfs / "subPropertyOf" -> p.asJsonLD),
+          maybeTopProperty.map(p => rdfs / "subPropertyOf" -> p.encoder(p)),
           maybeComment.map(c => rdfs / "comment" -> c.asJsonLD)
         ).flatten.toMap
       )
@@ -296,7 +297,7 @@ object DataProperty {
           Seq(
             Some(rdfs / "domain" -> domain.asJsonLD),
             Some(rdfs / "range"  -> range.asJsonLD),
-            maybeTopProperty.map(p => rdfs / "subPropertyOf" -> p.asJsonLD),
+            maybeTopProperty.map(p => rdfs / "subPropertyOf" -> p.encoder(p)),
             maybeComment.map(c => rdfs / "comment" -> c.asJsonLD)
           ).flatten.toMap
         )
