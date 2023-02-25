@@ -24,7 +24,7 @@ lazy val root = Project(
   .settings(
     organization := "io.renku",
     name := "jsonld4s",
-    crossScalaVersions := Seq("2.13.10", "2.12.12"),
+    crossScalaVersions := Seq("2.13.10", "2.12.17"),
     scalaVersion := "2.13.10",
     inConfig(Examples)(Defaults.testSettings)
   )
@@ -96,4 +96,3 @@ headerLicense := Some(
 )
 
 addCommandAlias("testAll", "+ test")
-
