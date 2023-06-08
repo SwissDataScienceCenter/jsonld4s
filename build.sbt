@@ -24,7 +24,7 @@ lazy val root = Project(
   .settings(
     organization := "io.renku",
     name := "jsonld4s",
-    crossScalaVersions := Seq("2.13.11", "2.12.17"),
+    crossScalaVersions := Seq("2.13.11", "2.12.18"),
     scalaVersion := "2.13.11",
     inConfig(Examples)(Defaults.testSettings)
   )
