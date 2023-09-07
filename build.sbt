@@ -46,7 +46,7 @@ libraryDependencies += "org.typelevel"  %% "cats-core" % "2.10.0"
 libraryDependencies += "eu.timepit"        %% "refined"         % "0.11.0"   % Test
 libraryDependencies += "org.scalacheck"    %% "scalacheck"      % "1.17.0"   % Test
 libraryDependencies += "org.scalamock"     %% "scalamock"       % "5.2.0"    % Test
-libraryDependencies += "org.scalatest"     %% "scalatest"       % "3.2.16"   % Test
+libraryDependencies += "org.scalatest"     %% "scalatest"       % "3.2.17"   % Test
 libraryDependencies += "org.scalatestplus" %% "scalacheck-1-16" % "3.2.14.0" % Test
 
 inThisBuild(
