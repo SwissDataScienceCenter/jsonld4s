@@ -52,7 +52,7 @@ libraryDependencies += "org.scalatestplus" %% "scalacheck-1-16" % "3.2.14.0" % T
 inThisBuild(
   List(
     homepage := Some(url("https://www.datascience.ch")),
-    licenses := List("Apache 2.0" -> new URL("http://www.apache.org/licenses/")),
+    licenses := List("Apache 2.0" -> new URI("http://www.apache.org/licenses/").toURL),
     description := "Scala Circe extension for JSON-LD",
     homepage := Some(url("https://github.com/SwissDataScienceCenter/jsonld4s")),
     addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full),
