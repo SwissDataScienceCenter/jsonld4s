@@ -43,7 +43,7 @@ libraryDependencies += "org.apache.jena" % "jena-core" % "4.10.0"
 libraryDependencies += "org.typelevel"  %% "cats-core" % "2.10.0"
 
 // Test dependencies
-libraryDependencies += "eu.timepit"        %% "refined"         % "0.11.0"   % Test
+libraryDependencies += "eu.timepit"        %% "refined"         % "0.11.1"   % Test
 libraryDependencies += "org.scalacheck"    %% "scalacheck"      % "1.17.0"   % Test
 libraryDependencies += "org.scalamock"     %% "scalamock"       % "5.2.0"    % Test
 libraryDependencies += "org.scalatest"     %% "scalatest"       % "3.2.17"   % Test
