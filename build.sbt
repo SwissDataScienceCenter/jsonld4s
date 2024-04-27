@@ -34,7 +34,7 @@ lazy val Examples = config("examples") extend Test
 headerSettings(Examples)
 automateHeaderSettings(Examples)
 
-val circeVersion = "0.14.6"
+val circeVersion = "0.14.7"
 libraryDependencies += "io.circe" %% "circe-core"    % circeVersion
 libraryDependencies += "io.circe" %% "circe-literal" % circeVersion
 libraryDependencies += "io.circe" %% "circe-parser"  % circeVersion
