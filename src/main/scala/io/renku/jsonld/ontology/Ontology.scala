@@ -215,7 +215,7 @@ object ObjectProperty {
 }
 
 object ObjectProperties {
-  lazy val empty: List[ObjectProperty.Def] = Nil
+  lazy val empty:                             List[ObjectProperty.Def] = Nil
   def apply(properties: ObjectProperty.Def*): List[ObjectProperty.Def] = properties.toList
 }
 
@@ -305,7 +305,7 @@ object DataProperty {
 }
 
 object DataProperties {
-  lazy val empty: List[DataProperty.Def] = Nil
+  lazy val empty:                           List[DataProperty.Def] = Nil
   def apply(properties: DataProperty.Def*): List[DataProperty.Def] = properties.toList
 }
 
@@ -322,7 +322,7 @@ object DataPropertyRange {
   final case class Simple(id: Property)                     extends DataPropertyRange
   final case class Enumeration(items: NonEmptyList[String]) extends DataPropertyRange
 
-  def apply(id:   Property): DataPropertyRange = Simple(id)
+  def apply(id:   Property):               DataPropertyRange = Simple(id)
   def apply(item: String, other: String*): DataPropertyRange = Enumeration(NonEmptyList.of(item, other: _*))
   def apply[T](items: NonEmptyList[T])(implicit show: Show[T]): DataPropertyRange = Enumeration(items.map(_.show))
 

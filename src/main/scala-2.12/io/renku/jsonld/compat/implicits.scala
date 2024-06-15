@@ -30,8 +30,8 @@ object implicits {
       override def foldLeft[A, B](fa: Seq[A], b: B)(f: (B, A) => B): B = fa.foldLeft(b)(f)
       override def foldRight[A, B](fa: Seq[A], lb: Eval[B])(f: (A, Eval[B]) => Eval[B]): Eval[B] =
         Foldable.iterateRight(fa, lb)(f)
-      override def pure[A](x: A): Seq[A] = Seq(x)
-      override def empty[A]: Seq[A] = Seq.empty
+      override def pure[A](x:     A):                       Seq[A] = Seq(x)
+      override def empty[A]:                                Seq[A] = Seq.empty
       override def combineK[A](x: Seq[A], y:       Seq[A]): Seq[A] = x ++ y
       override def ap[A, B](ff:   Seq[A => B])(fa: Seq[A]): Seq[B] = ff.flatMap(f => fa.map(f))
     }
