@@ -20,7 +20,7 @@ package io.renku.jsonld
 
 trait DecodingCache {
   def get[A](entityId: EntityId)(implicit cacheableDecoder: CacheableEntityDecoder): Option[A]
-  def put[A](entityId: EntityId, obj:                       A)(implicit cacheableDecoder: CacheableEntityDecoder): A
+  def put[A](entityId: EntityId, obj: A)(implicit cacheableDecoder: CacheableEntityDecoder): A
 }
 
 object DecodingCache {

@@ -43,9 +43,9 @@ object EntityType {
 import cats.data.NonEmptyList
 
 final case class EntityTypes(list: NonEmptyList[EntityType]) {
-  lazy val toList: List[EntityType] = list.toList
-  def contains(types: EntityType*): Boolean = (types diff list.toList).isEmpty
-  def contains(types: EntityTypes): Boolean = contains(types.toList: _*)
+  lazy val toList:                  List[EntityType] = list.toList
+  def contains(types: EntityType*): Boolean          = (types diff list.toList).isEmpty
+  def contains(types: EntityTypes): Boolean          = contains(types.toList: _*)
 
   override def hashCode(): Int = list.toList.toSet.hashCode()
 
