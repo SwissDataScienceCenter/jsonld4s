@@ -39,7 +39,7 @@ libraryDependencies += "io.circe" %% "circe-core"    % circeVersion
 libraryDependencies += "io.circe" %% "circe-literal" % circeVersion
 libraryDependencies += "io.circe" %% "circe-parser"  % circeVersion
 
-libraryDependencies += "org.apache.jena" % "jena-core" % "5.0.0"
+libraryDependencies += "org.apache.jena" % "jena-core" % "5.1.0"
 libraryDependencies += "org.typelevel"  %% "cats-core" % "2.12.0"
 
 // Test dependencies
