@@ -126,14 +126,13 @@ class NamedGraphSpec extends AnyWordSpec with should.Matchers with ScalaCheckPro
 
   "toJson" should {
 
-    "turn the given NamedGraph into JSON" in {
+    "turn the given NamedGraph into JSON" in
       forAll { (graph: NamedGraph) =>
         graph.toJson shouldBe Json.obj(
           "@id"    -> graph.id.asJson,
           "@graph" -> Json.fromValues(graph.entities.map(_.toJson))
         )
       }
-    }
   }
 
   "entityId" should {
@@ -221,29 +220,27 @@ class NamedGraphSpec extends AnyWordSpec with should.Matchers with ScalaCheckPro
     }
 
     "return NamedGraph with flattened entities in the sense of an JsonLDArray merge " +
-      "if there's more than one entity" in {
-        forAll {
-          (childlessGrandparent: JsonLDEntity, parentRelationProperty: Property, parentNotNested: JsonLDEntity) =>
-            val childrenTuples       = entityProperties.generateNonEmptyList().toList
-            val parentWithProperties = parentNotNested.add(childrenTuples)
-            val grandparentWithChild = childlessGrandparent.add(parentRelationProperty -> parentWithProperties)
+      "if there's more than one entity" in
+      forAll { (childlessGrandparent: JsonLDEntity, parentRelationProperty: Property, parentNotNested: JsonLDEntity) =>
+        val childrenTuples       = entityProperties.generateNonEmptyList().toList
+        val parentWithProperties = parentNotNested.add(childrenTuples)
+        val grandparentWithChild = childlessGrandparent.add(parentRelationProperty -> parentWithProperties)
 
-            val flattenedGrandparent =
-              childlessGrandparent.add(parentRelationProperty -> JsonLD.fromEntityId(parentWithProperties.id))
-            val flattenedParent = childrenTuples
-              .foldLeft(parentNotNested) { case (parent, (property, child)) =>
-                parent.add(property -> child.id.asJsonLD)
-              }
-            val children = childrenTuples.map { case (_, entity) => entity: JsonLD }
+        val flattenedGrandparent =
+          childlessGrandparent.add(parentRelationProperty -> JsonLD.fromEntityId(parentWithProperties.id))
+        val flattenedParent = childrenTuples
+          .foldLeft(parentNotNested) { case (parent, (property, child)) =>
+            parent.add(property -> child.id.asJsonLD)
+          }
+        val children = childrenTuples.map { case (_, entity) => entity: JsonLD }
 
-            val otherEntity = jsonLDEntities.generateOne
-            val edge        = jsonLDEdges.generateOne
+        val otherEntity = jsonLDEntities.generateOne
+        val edge        = jsonLDEdges.generateOne
 
-            val Right(flattened) = NamedGraph(entityIds.generateOne, grandparentWithChild, otherEntity, edge).flatten
+        val Right(flattened) = NamedGraph(entityIds.generateOne, grandparentWithChild, otherEntity, edge).flatten
 
-            flattened.entities should contain theSameElementsAs
-              flattenedGrandparent :: flattenedParent :: children ::: otherEntity :: edge :: Nil
-        }
+        flattened.entities should contain theSameElementsAs
+          flattenedGrandparent :: flattenedParent :: children ::: otherEntity :: edge :: Nil
       }
   }
 }
