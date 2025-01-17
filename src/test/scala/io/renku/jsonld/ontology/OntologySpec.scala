@@ -41,10 +41,8 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
       generateOntology(leaf, ontologyId) shouldBe JsonLD.arr(
         JsonLD
           .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
-
           JsonLD
             .entity(leaf.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
-
           JsonLD
             .entity(
               schema / "name",
@@ -73,12 +71,10 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
       generateOntology(rootType, ontologyId) shouldBe JsonLD.arr(
         JsonLD
           .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
-
           JsonLD
             .entity(rootType.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
           JsonLD
             .entity(leaf.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
-
           JsonLD
             .entity(
               schema / "leaf",
@@ -86,7 +82,6 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
               rdfs / "domain" -> List(rootType.clazz.id).asJsonLD,
               rdfs / "range"  -> List(ObjectPropertyRange(leaf)).asJsonLD
             ) ::
-
           JsonLD
             .entity(
               schema / "name",
@@ -121,14 +116,12 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
       generateOntology(rootType, ontologyId) shouldBe JsonLD.arr(
         JsonLD
           .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
-
           JsonLD
             .entity(rootType.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
           JsonLD
             .entity(otherLeafType.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
           JsonLD
             .entity(leaf.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
-
           JsonLD
             .entity(
               schema / "leaf",
@@ -136,7 +129,6 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
               rdfs / "domain" -> List(rootType.clazz.id).asJsonLD,
               rdfs / "range"  -> List(ObjectPropertyRange(leaf), ObjectPropertyRange(otherLeafType)).asJsonLD
             ) ::
-
           JsonLD
             .entity(
               schema / "name",
@@ -176,7 +168,6 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
       generateOntology(rootType, ontologyId) shouldBe JsonLD.arr(
         JsonLD
           .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
-
           JsonLD
             .entity(rootType.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
           JsonLD
@@ -185,7 +176,6 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
             .entity(otherLeafType.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
           JsonLD
             .entity(yetAnotherLeafType.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
-
           JsonLD
             .entity(
               schema / "leaf",
@@ -200,7 +190,6 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
               rdfs / "domain" -> List(rootType.clazz.id).asJsonLD,
               rdfs / "range"  -> List(ObjectPropertyRange(otherLeafType)).asJsonLD
             ) ::
-
           JsonLD
             .entity(
               schema / "name",
@@ -233,12 +222,10 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
       generateOntology(rootType, ontologyId) shouldBe JsonLD.arr(
         JsonLD
           .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
-
           JsonLD
             .entity(rootType.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
           JsonLD
             .entity(leaf.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
-
           JsonLD
             .entity(
               schema / "leaf",
@@ -246,7 +233,6 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
               rdfs / "domain" -> List(rootType.clazz.id).asJsonLD,
               rdfs / "range"  -> List(ObjectPropertyRange(leaf)).asJsonLD
             ) ::
-
           JsonLD
             .entity(
               schema / "name",
@@ -283,12 +269,10 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
       generateOntology(rootType, ontologyId) shouldBe JsonLD.arr(
         JsonLD
           .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
-
           JsonLD
             .entity(rootType.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
           JsonLD
             .entity(otherLeafType.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
-
           JsonLD
             .entity(
               schema / "leaf",
@@ -297,7 +281,6 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
               rdfs / "range"         -> List(ObjectPropertyRange(otherLeafType)).asJsonLD,
               rdfs / "subPropertyOf" -> EntityId.of(owl / "topObjectProperty").asJsonLD
             ) ::
-
           JsonLD
             .entity(
               schema / "name",
@@ -324,7 +307,6 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
       generateOntology(rootType, ontologyId) shouldBe JsonLD.arr(
         JsonLD
           .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
-
           JsonLD
             .entity(rootType.clazz.id,
                     EntityTypes of owl / "Class",
@@ -335,7 +317,6 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
                     EntityTypes of owl / "Class",
                     rdfs / "subClassOf" -> List(EntityId.of(schema / "Top")).asJsonLD
             ) ::
-
           JsonLD
             .entity(
               schema / "leaf",
@@ -362,12 +343,10 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
       generateOntology(rootType, ontologyId) shouldBe JsonLD.arr(
         JsonLD
           .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
-
           JsonLD
             .entity(rootType.clazz.id, EntityTypes of owl / "Class", rdfs / "comment" -> "Class comment".asJsonLD) ::
           JsonLD
             .entity(otherLeafType.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
-
           JsonLD
             .entity(
               schema / "leaf",
@@ -376,7 +355,6 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
               rdfs / "range"   -> List(ObjectPropertyRange(otherLeafType)).asJsonLD,
               rdfs / "comment" -> "Object prop comment".asJsonLD
             ) ::
-
           JsonLD
             .entity(
               schema / "name",
@@ -385,7 +363,6 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
               rdfs / "range"   -> List(DataPropertyRange(xsd / "string")).asJsonLD,
               rdfs / "comment" -> "Data prop comment".asJsonLD
             ) ::
-
           Nil: _*
       )
     }
@@ -444,10 +421,8 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
       generateOntology(root, ontologyId) shouldBe JsonLD.arr(
         JsonLD
           .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
-
           JsonLD
             .entity(root.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
-
           JsonLD
             .entity(
               schema / "root",
@@ -480,12 +455,10 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
       generateOntology(root, ontologyId) shouldBe JsonLD.arr(
         JsonLD
           .entity(ontologyId, EntityTypes of owl / "Ontology", owl / "imports" -> JsonLD.arr(oa.asJsonLD)) ::
-
           JsonLD
             .entity(root.clazz.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
           JsonLD
             .entity(reverseClass.id, EntityTypes of owl / "Class", Map.empty[Property, JsonLD]) ::
-
           JsonLD
             .entity(
               schema / "root",
@@ -493,7 +466,6 @@ class OntologySpec extends AnyWordSpec with should.Matchers {
               rdfs / "domain" -> List(reverseClass.id).asJsonLD,
               rdfs / "range"  -> List(ObjectPropertyRange(root)).asJsonLD
             ) ::
-
           JsonLD
             .entity(
               schema / "name",

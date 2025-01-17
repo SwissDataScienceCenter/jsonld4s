@@ -32,46 +32,40 @@ class EntityTypeSpec extends AnyWordSpec with ScalaCheckPropertyChecks with shou
 
   "show" should {
 
-    "return the value" in {
+    "return the value" in
       forAll { t: EntityType => t.show shouldBe t.value }
-    }
   }
 
   "EntityTypes.show" should {
 
-    "return string representations of all the types separated with `; `" in {
+    "return string representations of all the types separated with `; `" in
       forAll { t: EntityTypes => t.show shouldBe t.list.map(_.value).nonEmptyIntercalate("; ") }
-    }
   }
 
   "EntityTypes.equals" should {
-    "return true if the types are identical regardless of the order" in {
+    "return true if the types are identical regardless of the order" in
       forAll { t: EntityTypes =>
         val equalTypes = EntityTypes(NonEmptyList.fromListUnsafe(Random.shuffle(t.list.toList)))
         t            shouldBe equalTypes
         t.hashCode() shouldBe equalTypes.hashCode()
       }
-    }
 
-    "return false if the types are not identical" in {
+    "return false if the types are not identical" in
       forAll { (t1: EntityTypes, t2: EntityTypes) =>
         t1            should not be t2
         t1.hashCode() should not be t2.hashCode()
       }
-    }
   }
 
   "contains" should {
-    "return true for exact match although in different order" in {
+    "return true for exact match although in different order" in
       forAll { entityTypes: EntityTypes =>
         val shuffledTypes = Random.shuffle(entityTypes.toList)
         (entityTypes contains EntityTypes.of(shuffledTypes.head, shuffledTypes.tail: _*)) shouldBe true
       }
-    }
-    "return true if there are at least the searched types" in {
+    "return true if there are at least the searched types" in
       forAll { (type1: EntityType, type2: EntityType, type3: EntityType) =>
         EntityTypes.of(type1, type2, type3).contains(type2, type1) shouldBe true
       }
-    }
   }
 }
