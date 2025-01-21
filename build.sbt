@@ -40,7 +40,7 @@ libraryDependencies += "io.circe" %% "circe-literal" % circeVersion
 libraryDependencies += "io.circe" %% "circe-parser"  % circeVersion
 
 libraryDependencies += "org.apache.jena" % "jena-core" % "5.1.0"
-libraryDependencies += "org.typelevel"  %% "cats-core" % "2.12.0"
+libraryDependencies += "org.typelevel"  %% "cats-core" % "2.13.0"
 
 // Test dependencies
 libraryDependencies += "eu.timepit"        %% "refined"         % "0.11.2"   % Test
