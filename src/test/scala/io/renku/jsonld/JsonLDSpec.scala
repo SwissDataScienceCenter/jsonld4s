@@ -38,79 +38,70 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
 
   "JsonLD.fromString" should {
 
-    "allow to construct JsonLD String value" in {
+    "allow to construct JsonLD String value" in
       forAll { value: String =>
         JsonLD.fromString(value).toJson shouldBe
           json"""{
             "@value": $value
           }"""
       }
-    }
 
-    "have no entityId" in {
+    "have no entityId" in
       forAll { value: String =>
         JsonLD.fromString(value).entityId shouldBe None
       }
-    }
 
-    "have no entityTypes" in {
+    "have no entityTypes" in
       forAll { value: String =>
         JsonLD.fromString(value).entityTypes shouldBe None
       }
-    }
   }
 
   "JsonLD.fromInt" should {
 
-    "allow to construct JsonLD Int value" in {
+    "allow to construct JsonLD Int value" in
       forAll { value: Int =>
         JsonLD.fromInt(value).toJson shouldBe
           json"""{
             "@value": $value
           }"""
       }
-    }
 
-    "have no entityId" in {
+    "have no entityId" in
       forAll { value: Int =>
         JsonLD.fromInt(value).entityId shouldBe None
       }
-    }
 
-    "have no entityTypes" in {
+    "have no entityTypes" in
       forAll { value: Int =>
         JsonLD.fromInt(value).entityTypes shouldBe None
       }
-    }
   }
 
   "JsonLD.fromLong" should {
 
-    "allow to construct JsonLD Long value" in {
+    "allow to construct JsonLD Long value" in
       forAll { value: Long =>
         JsonLD.fromLong(value).toJson shouldBe
           json"""{
             "@value": $value
           }"""
       }
-    }
 
-    "have no entityId" in {
+    "have no entityId" in
       forAll { value: Long =>
         JsonLD.fromLong(value).entityId shouldBe None
       }
-    }
 
-    "have no entityTypes" in {
+    "have no entityTypes" in
       forAll { value: Long =>
         JsonLD.fromLong(value).entityTypes shouldBe None
       }
-    }
   }
 
   "JsonLD.fromInstant" should {
 
-    "allow to construct JsonLD xsd:dateTime value" in {
+    "allow to construct JsonLD xsd:dateTime value" in
       forAll { value: Instant =>
         JsonLD.fromInstant(value).toJson shouldBe
           json"""{
@@ -118,24 +109,21 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
             "@value": $value
           }"""
       }
-    }
 
-    "have no entityId" in {
+    "have no entityId" in
       forAll { value: Instant =>
         JsonLD.fromInstant(value).entityId shouldBe None
       }
-    }
 
-    "have no entityTypes" in {
+    "have no entityTypes" in
       forAll { value: Instant =>
         JsonLD.fromInstant(value).entityTypes shouldBe None
       }
-    }
   }
 
   "JsonLD.fromLocalDate" should {
 
-    "allow to construct JsonLD xsd:dateTime value" in {
+    "allow to construct JsonLD xsd:dateTime value" in
       forAll { value: LocalDate =>
         JsonLD.fromLocalDate(value).toJson shouldBe
           json"""{
@@ -143,50 +131,43 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
             "@value": $value
           }"""
       }
-    }
 
-    "have no entityId" in {
+    "have no entityId" in
       forAll { value: LocalDate =>
         JsonLD.fromLocalDate(value).entityId shouldBe None
       }
-    }
 
-    "have no entityTypes" in {
+    "have no entityTypes" in
       forAll { value: LocalDate =>
         JsonLD.fromLocalDate(value).entityTypes shouldBe None
       }
-    }
   }
 
   "JsonLD.fromBoolean" should {
 
-    "allow to construct JsonLD Boolean value" in {
+    "allow to construct JsonLD Boolean value" in
       forAll { value: Boolean =>
         JsonLD.fromBoolean(value).toJson shouldBe
           json"""{
             "@value": $value
           }"""
       }
-    }
 
-    "have no entityId" in {
+    "have no entityId" in
       forAll { value: Boolean =>
         JsonLD.fromBoolean(value).entityId shouldBe None
       }
-    }
 
-    "have no entityTypes" in {
+    "have no entityTypes" in
       forAll { value: Boolean =>
         JsonLD.fromBoolean(value).entityTypes shouldBe None
       }
-    }
   }
 
   "JsonLD.Null" should {
 
-    "be Json.Null" in {
+    "be Json.Null" in
       JsonLD.JsonLDNull.toJson == null
-    }
 
     "have no entityId" in {
       JsonLD.JsonLDNull.entityId shouldBe None
@@ -199,27 +180,25 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
 
   "JsonLD.fromOption" should {
 
-    "allow to construct JsonLD value when the value is present" in {
+    "allow to construct JsonLD value when the value is present" in
       forAll { value: Long =>
         JsonLD.fromOption(Some(value)).toJson shouldBe
           json"""{
             "@value": $value
           }"""
       }
-    }
 
-    "allow to construct JsonLD value when the value is present and has some type" in {
+    "allow to construct JsonLD value when the value is present and has some type" in
       forAll { value: Instant =>
         implicit val jsonLDEncoder: JsonLDEncoder[Instant] = JsonLDEncoder.instance[Instant](JsonLD.fromInstant)
         JsonLD.fromOption(Some(value)).toJson shouldBe JsonLD.fromInstant(value).toJson
       }
-    }
 
     "allow to construct JsonLD value when the value is absent" in {
       JsonLD.fromOption(Option.empty[String]) shouldBe JsonLD.JsonLDNull
     }
 
-    "have entityId for Some entity having one" in {
+    "have entityId for Some entity having one" in
       forAll { (id: EntityId, types: EntityTypes, property: Property, value: String) =>
         implicit val encoder: JsonLDEncoder[Object] = JsonLDEncoder.instance { o: Object =>
           JsonLD.entity(id, types, property -> JsonLD.fromString(o.value))
@@ -227,13 +206,12 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
 
         JsonLD.fromOption(Some(Object(value))).entityId shouldBe Some(id)
       }
-    }
 
     "have no entityId for None" in {
       JsonLD.fromOption(Option.empty[String]).entityId shouldBe None
     }
 
-    "have entityTypes for Some entity having one" in {
+    "have entityTypes for Some entity having one" in
       forAll { (id: EntityId, types: EntityTypes, property: Property, value: String) =>
         implicit val encoder: JsonLDEncoder[Object] = JsonLDEncoder.instance { o: Object =>
           JsonLD.entity(id, types, property -> JsonLD.fromString(o.value))
@@ -241,7 +219,6 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
 
         JsonLD.fromOption(Some(Object(value))).entityTypes shouldBe Some(types)
       }
-    }
 
     "have no entityTypes for None" in {
       JsonLD.fromOption(Option.empty[String]).entityTypes shouldBe None
@@ -250,53 +227,47 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
 
   "JsonLD.fromEntityId" should {
 
-    "allow to construct JsonLD EntityId object" in {
+    "allow to construct JsonLD EntityId object" in
       forAll { value: EntityId =>
         JsonLD.fromEntityId(value).toJson shouldBe
           json"""{
             "@id": $value
           }"""
       }
-    }
 
-    "have no entityId" in {
+    "have no entityId" in
       forAll { value: EntityId =>
         JsonLD.fromEntityId(value).entityId shouldBe None
       }
-    }
 
-    "have no entityTypes" in {
+    "have no entityTypes" in
       forAll { value: EntityId =>
         JsonLD.fromEntityId(value).entityTypes shouldBe None
       }
-    }
   }
 
   "JsonLD.arr" should {
 
-    "allow to construct an array of JsonLD objects" in {
+    "allow to construct an array of JsonLD objects" in
       forAll { values: List[String] =>
         JsonLD.arr(values map JsonLD.fromString: _*).toJson shouldBe
           Json.arr(values map Json.fromString map (json => Json.obj("@value" -> json)): _*)
       }
-    }
 
-    "have no entityId" in {
+    "have no entityId" in
       forAll { values: List[String] =>
         JsonLD.arr(values map JsonLD.fromString: _*).entityId shouldBe None
       }
-    }
 
-    "have no entityTypes" in {
+    "have no entityTypes" in
       forAll { values: List[String] =>
         JsonLD.arr(values map JsonLD.fromString: _*).entityTypes shouldBe None
       }
-    }
   }
 
   "JsonLD.entity" should {
 
-    "allow to construct JsonLD entity with multiple types" in {
+    "allow to construct JsonLD entity with multiple types" in
       forAll(entityIds, nonEmptyList(entityTypes, minElements = 2), schemas) { (id, types, schema) =>
         val (name1, values1)            = listValueProperties(schema).generateOne
         val property1 @ (_, value1)     = name1 -> JsonLD.arr(values1.toList: _*)
@@ -310,9 +281,8 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
             "$name2": ${value2.toJson}
           }""").fold(throw _, identity)
       }
-    }
 
-    "allow to construct JsonLD entity with single type" in {
+    "allow to construct JsonLD entity with single type" in
       forAll(entityIds, entityTypes, schemas) { (id, entityType, schema) =>
         val (name1, values1)            = listValueProperties(schema).generateOne
         val property1 @ (_, value1)     = name1 -> JsonLD.arr(values1.toList: _*)
@@ -326,9 +296,8 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
             "$name2": ${value2.toJson}
           }""").fold(throw _, identity)
       }
-    }
 
-    "skip properties with properties having None values" in {
+    "skip properties with properties having None values" in
       forAll { (id: EntityId, entityType: EntityType, schema: Schema) =>
         val property1 @ (name1, value1) = singleValueProperties(schema).generateOne
         val property2                   = properties.generateOne -> JsonLD.fromOption(Option.empty[String])
@@ -340,9 +309,8 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
             "$name1": ${value1.toJson}
           }""").fold(throw _, identity)
       }
-    }
 
-    "be able to add a single reverse property" in {
+    "be able to add a single reverse property" in
       forAll {
         (parentId:       EntityId,
          parentTypes:    EntityTypes,
@@ -369,9 +337,8 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
             }
           }""").fold(throw _, identity)
       }
-    }
 
-    "be able to add multiple reverse properties" in {
+    "be able to add multiple reverse properties" in
       forAll {
         (parentId:       EntityId,
          parentTypes:    EntityTypes,
@@ -408,9 +375,8 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
             }
           }""").fold(throw _, identity)
       }
-    }
 
-    "be able to add reverse property with a list of entities" in {
+    "be able to add reverse property with a list of entities" in
       forAll { (parentId: EntityId, parentTypes: EntityTypes, parentProperty: (Property, JsonLD)) =>
         val reverseProperty         = properties.generateOne
         val reversePropertyEntities = jsonLDEntities.generateNonEmptyList().toList
@@ -427,9 +393,8 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
             }
           }""").fold(throw _, identity)
       }
-    }
 
-    "be able to skip reverse property when empty" in {
+    "be able to skip reverse property when empty" in
       forAll { (parentId: EntityId, parentTypes: EntityTypes, parentProperty: (Property, JsonLD)) =>
         JsonLD
           .entity(parentId, parentTypes, Reverse.empty, parentProperty)
@@ -440,66 +405,57 @@ class JsonLDSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should.M
             "${parentProperty._1}": ${parentProperty._2.toJson}
           }""").fold(throw _, identity)
       }
-    }
 
-    "have some entityId" in {
+    "have some entityId" in
       forAll { (id: EntityId, types: EntityTypes, property: (Property, JsonLD)) =>
         JsonLD.entity(id, types, property).entityId shouldBe Some(id)
       }
-    }
 
-    "have some entityTypes" in {
+    "have some entityTypes" in
       forAll { (id: EntityId, types: EntityTypes, property: (Property, JsonLD)) =>
         JsonLD.entity(id, types, property).entityTypes shouldBe Some(types)
       }
-    }
   }
 
   "asArray" should {
-    "return vector with single JsonLDValue" in {
+    "return vector with single JsonLDValue" in
       forAll(jsonLDValues) { json =>
         json.asArray shouldBe Some(Vector(json))
       }
-    }
 
-    "return vector with single JsonLDEntityID" in {
+    "return vector with single JsonLDEntityID" in
       forAll { entityId: EntityId =>
         val idAsJson = JsonLD.fromEntityId(entityId)
         idAsJson.asArray shouldBe Some(Vector(idAsJson))
       }
-    }
 
     "return None on a JsonLDNull" in {
       JsonLD.Null.asArray shouldBe None
     }
 
-    "return vector containing the entity" in {
+    "return vector containing the entity" in
       forAll(jsonLDEntities) { entity =>
         entity.asArray shouldBe Some(Vector(entity))
       }
-    }
 
-    "return a vector with the same elements as the array" in {
+    "return a vector with the same elements as the array" in
       forAll(nonEmptyList(jsonLDEntities)) { entities =>
         JsonLD.arr(entities.toList: _*).asArray shouldBe Some(entities.toList.toVector)
       }
-    }
   }
 
   "equals & hashCode" should {
-    "return true for two JsonLDArrays with the same elements in the same order" in {
+    "return true for two JsonLDArrays with the same elements in the same order" in
       forAll(nonEmptyList(jsonLDEntities)) { entities =>
         JsonLD.arr(entities.toList: _*)          shouldBe JsonLD.arr(entities.toList: _*)
         JsonLD.arr(entities.toList: _*).hashCode shouldBe JsonLD.arr(entities.toList: _*).hashCode
       }
-    }
 
-    "return true for two JsonLDArrays with the same elements in *different* order" in {
+    "return true for two JsonLDArrays with the same elements in *different* order" in
       forAll(nonEmptyList(jsonLDEntities)) { entities =>
         JsonLD.arr(entities.toList: _*)          shouldBe JsonLD.arr(Random.shuffle(entities.toList): _*)
         JsonLD.arr(entities.toList: _*).hashCode shouldBe JsonLD.arr(Random.shuffle(entities.toList): _*).hashCode
       }
-    }
 
   }
 

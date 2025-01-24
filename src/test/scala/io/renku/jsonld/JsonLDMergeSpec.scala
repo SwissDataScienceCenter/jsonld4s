@@ -31,46 +31,40 @@ class JsonLDMergeSpec extends AnyWordSpec with ScalaCheckPropertyChecks with sho
 
   "merge" should {
 
-    "do nothing for JsonLDValue" in {
+    "do nothing for JsonLDValue" in
       forAll(jsonLDValues) { json =>
         json.merge shouldBe Right(json)
       }
-    }
 
-    "do nothing for JsonLDEntityId" in {
+    "do nothing for JsonLDEntityId" in
       forAll { entityId: EntityId =>
         val json = JsonLD.fromEntityId(entityId)
         json.merge shouldBe Right(json)
       }
-    }
 
     "do nothing for JsonLDNull" in {
       JsonLD.Null.merge shouldBe Right(JsonLD.Null)
     }
 
-    "do nothing for JsonLDEntity" in {
+    "do nothing for JsonLDEntity" in
       forAll { entity: JsonLDEntity =>
         entity.merge shouldBe Right(entity)
       }
-    }
 
-    "do nothing for JsonLDArray of JsonLDEntities if there are not Edges to merge" in {
+    "do nothing for JsonLDArray of JsonLDEntities if there are not Edges to merge" in
       forAll { (entity1: JsonLDEntity, entity2: JsonLDEntity) =>
         JsonLD.arr(entity1, entity2).merge shouldBe Right(JsonLD.arr(entity1, entity2))
       }
-    }
 
-    "do nothing for JsonLDArray of JsonLDEntityIds" in {
+    "do nothing for JsonLDArray of JsonLDEntityIds" in
       forAll { (id1: EntityId, id2: EntityId) =>
         JsonLD.arr(id1.asJsonLD, id2.asJsonLD).merge shouldBe Right(JsonLD.arr(id1.asJsonLD, id2.asJsonLD))
       }
-    }
 
-    "do nothing for JsonLDArray of JsonLDValues" in {
+    "do nothing for JsonLDArray of JsonLDValues" in
       forAll(jsonLDValues, jsonLDValues) { (value1, value2) =>
         JsonLD.arr(value1, value2).merge shouldBe Right(JsonLD.arr(value1, value2))
       }
-    }
 
     "move targets from relevant edges to JsonLDEntities defined in the JsonLDArray" in {
       val entity1 = JsonLD.entity(
