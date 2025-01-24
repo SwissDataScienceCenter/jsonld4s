@@ -41,17 +41,15 @@ class EntityIdSpec extends AnyWordSpec with ScalaCheckPropertyChecks with should
       }
     }
 
-    "allow passing a Property" in {
+    "allow passing a Property" in
       forAll { (property: Property) =>
         EntityId.of(property).value shouldBe property.url
       }
-    }
 
-    "allow passing a Schema" in {
+    "allow passing a Schema" in
       forAll { (schema: Schema) =>
         EntityId.of(schema).value shouldBe schema.url
       }
-    }
 
     "return an EntityId with the URI created from the given value using the converter" in {
       case class Value(v: String)

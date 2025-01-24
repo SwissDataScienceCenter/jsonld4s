@@ -45,20 +45,18 @@ class JsonLDDecoderSpec
 
   "emap" should {
 
-    "use the given function to map the result" in {
+    "use the given function to map the result" in
       forAll { value: String =>
         val decoder = decodeString.emap(_.length.asRight[String])
         JsonLD.fromString(value).cursor.as[Int](decoder) shouldBe Right(value.length)
       }
-    }
 
-    "fail with the message given in the mapping function" in {
+    "fail with the message given in the mapping function" in
       forAll { value: String =>
         val message = nonEmptyStrings().generateOne
         val decoder = decodeString.emap(_ => message.asLeft[Int])
         JsonLD.fromString(value).cursor.as[Int](decoder).leftMap(_.message) shouldBe Left(message)
       }
-    }
 
     case class Person(name: String)
 
@@ -71,7 +69,7 @@ class JsonLDDecoderSpec
       result.getClass shouldBe decoder.getClass
     }
 
-    "apply the function when called on JsonLDEntityDecoder" in {
+    "apply the function when called on JsonLDEntityDecoder" in
       forAll(Gen.alphaNumStr) { value: String =>
         val decoder: JsonLDEntityDecoder[Person] = JsonLDDecoder.entity(EntityTypes.of(schema / "Person")) { cursor =>
           cursor.downField(schema / "name").as[String].map(Person)
@@ -92,7 +90,6 @@ class JsonLDDecoderSpec
 
         decoded shouldBe Person(value.reverse)
       }
-    }
 
     "fail if emap is returning a Left on JsonLDEntityDecoder" in {
       val decoder: JsonLDEntityDecoder[Person] = JsonLDDecoder.entity(EntityTypes.of(schema / "Person")) { cursor =>
@@ -116,12 +113,11 @@ class JsonLDDecoderSpec
   }
 
   "map" should {
-    "appy the given function" in {
+    "appy the given function" in
       forAll { value: String =>
         val decoder = decodeString.map(_.length)
         JsonLD.fromString(value).cursor.as[Int](decoder) shouldBe Right(value.length)
       }
-    }
   }
 
   "implicit decoders" should {
@@ -143,19 +139,17 @@ class JsonLDDecoderSpec
 
     forAll(scenarios) {
       case (typeName, decoder, generator, illegalType: JsonLDValue[_]) =>
-        s"allow to successfully decode $typeName JsonLDValues to $typeName" in {
+        s"allow to successfully decode $typeName JsonLDValues to $typeName" in
           forAll(generator) { case (value, jsonLD) =>
             jsonLD.cursor.as(decoder) shouldBe Right(value)
           }
-        }
 
-        s"fail to decode JsonLDValues of illegal type to $typeName" in {
+        s"fail to decode JsonLDValues of illegal type to $typeName" in
           forAll(generator) { case (_, _) =>
             illegalType.cursor.as(decoder) shouldBe Left(
               DecodingFailure(s"Cannot decode ${illegalType.value} to $typeName", Nil)
             )
           }
-        }
 
       case (_, _, _, illegalType) => fail(s"Missing tests for $illegalType")
     }
@@ -175,13 +169,12 @@ class JsonLDDecoderSpec
       JsonLD.fromString(date.toString).cursor.as[LocalDate] shouldBe Right(date)
     }
 
-    "allow to successfully decode any JsonLD to JsonLD" in {
+    "allow to successfully decode any JsonLD to JsonLD" in
       forAll { json: JsonLD =>
         json.cursor.as[JsonLD] shouldBe Right(json)
       }
-    }
 
-    "allow to decode to Some for optional property if it exists" in {
+    "allow to decode to Some for optional property if it exists" in
       forAll(entityIds, entityTypesObject, properties, Gen.oneOf(jsonLDValues, jsonLDEntities)) {
         (entityId, entityTypes, property, value) =>
           JsonLD
@@ -190,9 +183,8 @@ class JsonLDDecoderSpec
             .downField(property)
             .as[Option[JsonLD]] shouldBe Some(value).asRight
       }
-    }
 
-    "allow to decode to None for optional property if it does not exists" in {
+    "allow to decode to None for optional property if it does not exists" in
       forAll { (entityId: EntityId, entityTypes: EntityTypes) =>
         JsonLD
           .entity(entityId, entityTypes, Map.empty[Property, JsonLD])
@@ -200,7 +192,6 @@ class JsonLDDecoderSpec
           .downField(schema / "non-existing")
           .as[Option[JsonLD]] shouldBe None.asRight
       }
-    }
   }
 
   "decode" should {

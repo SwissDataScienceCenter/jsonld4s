@@ -34,7 +34,7 @@ class JsonLDEncoderSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
 
   "instance" should {
 
-    "allow to create a JsonLDEncoder for the given type" in {
+    "allow to create a JsonLDEncoder for the given type" in
       forAll { (id: EntityId, types: EntityTypes, property: Property, value: String) =>
         val encoder = JsonLDEncoder.instance[Object] { o =>
           JsonLD.entity(id, types, property -> o.field.asJsonLD)
@@ -42,12 +42,11 @@ class JsonLDEncoderSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
 
         encoder(Object(value)) shouldBe JsonLD.entity(id, types, property -> value.asJsonLD)
       }
-    }
   }
 
   "entityId" should {
 
-    "allow to create a JsonLDEncoder producing EntityId for the given type" in {
+    "allow to create a JsonLDEncoder producing EntityId for the given type" in
       forAll { (value: String) =>
         val encoder = JsonLDEncoder.entityId[Object] { o =>
           EntityId.of(o.field)
@@ -55,16 +54,14 @@ class JsonLDEncoderSpec extends AnyWordSpec with ScalaCheckPropertyChecks with s
 
         encoder(Object(value)) shouldBe JsonLD.fromEntityId(EntityId.of(value))
       }
-    }
   }
 
   "schema" should {
 
-    "allow to create a JsonLDEncoder producing EntityId for the given type" in {
+    "allow to create a JsonLDEncoder producing EntityId for the given type" in
       forAll { (schema: Schema) =>
         schema.asJsonLD shouldBe JsonLDEntityId(EntityId.of(schema.toString))
       }
-    }
   }
 
   "apply" should {
